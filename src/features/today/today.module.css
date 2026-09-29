@@ -1,0 +1,86 @@
+.kmDone { font-size: 16px; color: var(--text); }
+
+.note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-size: 13.5px;
+}
+.note svg { width: 15px; height: 15px; margin-top: 2px; flex: none; color: var(--accent); }
+
+.weekRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.warn { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--warn); }
+.warn svg { width: 15px; height: 15px; flex: none; }
+
+/* Tages-Status */
+.status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  --s: var(--muted);
+}
+.status[data-state='done'] { --s: var(--good); background: var(--mob-soft); border-color: transparent; }
+.status[data-state='partial'] { --s: var(--warn); background: var(--warn-soft); border-color: transparent; }
+.status[data-state='missed'] { --s: var(--bad); background: var(--bad-soft); border-color: transparent; }
+.statusIcon { width: 24px; height: 24px; color: var(--s); flex: none; }
+.statusTitle { font-weight: 650; }
+
+/* Warnhinweis Schmerz */
+.alert {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  background: var(--warn-soft);
+  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+}
+.alert[data-level='bad'] { background: var(--bad-soft); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+.alert svg { width: 18px; height: 18px; flex: none; color: var(--warn); margin-top: 1px; }
+.alert[data-level='bad'] svg { color: var(--bad); }
+
+/* Einheit hinzufügen */
+.collapsed > header { margin-bottom: 0; }
+.addGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.addType {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 550;
+  font-size: 14px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.addType:hover { background: var(--c-soft); border-color: transparent; }
+.addType svg { width: 18px; height: 18px; color: var(--c); }
+
+/* Beschwerden */
+.pain { display: flex; flex-wrap: wrap; gap: 6px; }
+.pain button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pain button[data-level='1'] { background: var(--warn-soft); border-color: var(--warn); color: var(--text); }
+.pain button[data-level='2'] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); font-weight: 650; }

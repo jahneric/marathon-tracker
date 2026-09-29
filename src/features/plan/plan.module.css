@@ -1,0 +1,115 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
+.legend i[data-k='done'] { background: var(--good); }
+.legend i[data-k='partial'] { background: var(--warn); }
+.legend i[data-k='missed'] { background: var(--bad); }
+.legend i[data-k='deload'] { background: var(--deload); }
+.legend i[data-k='race'] { background: var(--race); }
+
+.group { display: flex; flex-direction: column; gap: 8px; }
+
+.phase { margin: 14px 0 2px; }
+.phase h2 { font-size: 15px; font-weight: 700; }
+
+.week {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  scroll-margin: 90px;
+}
+.week::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: transparent;
+}
+.week[data-kind='deload']::before { background: var(--deload); }
+.week[data-kind='race']::before { background: var(--race); }
+.week[data-current] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-md); }
+.week[data-past] .head { opacity: 0.8; }
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  width: 100%;
+}
+
+.no { width: 38px; flex: none; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+.meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--muted); }
+.weight { display: inline-flex; align-items: center; gap: 3px; color: var(--text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+.weight svg { width: 12px; height: 12px; }
+.summary { display: block; font-size: 13.5px; margin-top: 1px; }
+.summary b { color: var(--muted); font-weight: 600; }
+
+.km { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-2); white-space: nowrap; }
+.km b { font-size: 15px; color: var(--text); }
+
+.chev { width: 18px; height: 18px; color: var(--muted); flex: none; transition: transform 0.2s var(--ease); }
+.head[aria-expanded='true'] .chev { transform: rotate(180deg); }
+
+/* Ampel: ein Feld pro Tag */
+.strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding-left: 50px; }
+.cell { height: 6px; border-radius: 3px; background: var(--surface-2); }
+.cell[data-state='done'] { background: var(--good); }
+.cell[data-state='partial'] { background: var(--warn); }
+.cell[data-state='missed'] { background: var(--bad); }
+.cell[data-state='rest'] { background: transparent; box-shadow: inset 0 0 0 1px var(--border); }
+
+.note { display: flex; gap: 6px; font-size: 13px; color: var(--text-2); padding-left: 50px; }
+.note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--accent); }
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  animation: expand 0.2s var(--ease);
+}
+@keyframes expand {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 7px 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--surface-2);
+  font-size: 13px;
+}
+.day[data-today] { border-color: var(--accent); }
+.day[data-state='done'] { background: var(--mob-soft); }
+.day[data-state='missed'] { background: var(--bad-soft); }
+.day[data-state='partial'] { background: var(--warn-soft); }
+.dots { display: flex; gap: 3px; margin-top: 4px; min-height: 7px; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.dots i[style*='background'] { box-shadow: none; }
+
+@media (max-width: 380px) {
+  .strip, .note { padding-left: 0; }
+}

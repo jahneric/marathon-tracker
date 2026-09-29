@@ -1,0 +1,92 @@
+.pace {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pace b { font-size: 16px; color: var(--text); }
+
+/* Kraft */
+.exList { display: flex; flex-direction: column; }
+.ex { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+.ex:first-child { padding-top: 0; }
+.ex:last-child { border-bottom: 0; padding-bottom: 0; }
+.exHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.exName { font-weight: 620; }
+
+.sets { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.set {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.set input[type='text'] {
+  width: 56px;
+  min-height: 36px;
+  padding: 4px 6px;
+  text-align: center;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+}
+.set span { font-size: 12px; color: var(--muted); padding: 0 2px; }
+
+.setCheck {
+  min-width: 44px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s, color 0.15s;
+}
+.setCheck[aria-pressed='true'] { background: var(--good); border-color: var(--good); color: #fff; }
+
+/* Mobility */
+.mobList { display: flex; flex-direction: column; }
+.mobItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.mobItem:first-child { padding-top: 0; }
+.mobItem:last-child { border-bottom: 0; }
+.mobName { font-weight: 550; }
+
+.mobCheck {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+  color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mobCheck svg { width: 16px; height: 16px; stroke-width: 3; }
+.mobCheck[aria-pressed='true'] { background: var(--good); border-color: var(--good); color: #fff; }
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 92px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-weight: 600;
+  font-size: 14px;
+}
+.timer svg { width: 15px; height: 15px; }
+.timer[aria-pressed='true'] { background: var(--mob); border-color: var(--mob); color: #fff; }

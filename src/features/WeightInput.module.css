@@ -1,0 +1,29 @@
+.wrap { display: flex; align-items: center; gap: 8px; }
+
+.field {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  padding-right: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.field input[type='text'] {
+  width: 70px;
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  text-align: right;
+  padding: 6px 6px 6px 10px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.field input[type='text']:focus { box-shadow: none; }
+.field span { font-size: 13px; color: var(--muted); }
+
+.delta { font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--text-2); }
