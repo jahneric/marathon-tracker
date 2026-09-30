@@ -1,11 +1,11 @@
 import { Download, Monitor, Moon, Plus, Sun, Trash2, Upload } from 'lucide-react';
 import { useState, type ChangeEvent } from 'react';
 import type { Paces } from '@/data/plan';
-import { formatDate, todayKey, weekday } from '@/domain/dates';
+import { todayKey } from '@/domain/dates';
 import { formatKm, parseNum } from '@/domain/format';
 import { shoeKm } from '@/domain/logs';
-import { raceDate } from '@/domain/schedule';
 import { addShoe, importBackup, resetAll, setPace, setSetting, toggleShoeRetired } from '@/store/actions';
+import { PlanCard } from './PlanCard';
 import { flush, isBackup } from '@/store/store';
 import type { AppState, Theme } from '@/store/types';
 import { Button } from '@/ui/Button';
@@ -25,29 +25,7 @@ export function SettingsView({ state }: { state: AppState }) {
 
   return (
     <>
-      <Card title="Plan">
-        <div className="grid2">
-          <Field label="Planstart (Montag W1)">
-            <input
-              type="date"
-              value={settings.start}
-              onChange={e => {
-                const v = e.target.value;
-                if (!v) return;
-                if (weekday(v) !== 0) return toast('Der Planstart muss ein Montag sein');
-                setSetting('start', v);
-                toast('Plan verschoben');
-              }}
-            />
-          </Field>
-          <Field label="Zielzeit">
-            <input type="text" value={settings.goal} onChange={e => setSetting('goal', e.target.value)} />
-          </Field>
-        </div>
-        <p className="tiny muted" style={{ marginTop: 10 }}>
-          Marathon: {formatDate(raceDate(settings.start), { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}. Bei anderem Renndatum den Start so verschieben, dass der Renntag am Sonntag von W52 liegt.
-        </p>
-      </Card>
+      <PlanCard state={state} />
 
       <Card title="Tempi (min/km)">
         <div className="grid2">

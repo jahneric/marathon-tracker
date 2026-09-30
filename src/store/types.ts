@@ -1,6 +1,7 @@
 import type { Paces } from '@/data/plan';
 import type { WorkoutId } from '@/data/exercises';
 import type { DateKey } from '@/domain/dates';
+import type { PlanEvent } from '@/domain/ics';
 
 // Achtung: Dieses Schema ist mit v1 (localStorage „mt27“) kompatibel.
 // Eingabewerte bleiben Strings, damit alte Backups ohne Migration funktionieren.
@@ -23,6 +24,8 @@ export interface Unit {
   target?: number;
   race?: boolean;
   tournament?: boolean;
+  /** vollständige Beschreibung (importierte Pläne) */
+  info?: string;
 }
 
 export interface SetLog {
@@ -99,6 +102,16 @@ export interface AppState {
   /** Wochennummer → true */
   tournaments: Record<string, boolean>;
   shoes: Shoe[];
-  /** Körpergewicht pro Woche: Wochennummer → kg (Eingabe-String) */
-  weights: Record<string, string>;
+  /** Körpergewicht pro Kalenderwoche: Montag (YYYY-MM-DD) → kg (Eingabe-String) */
+  weights: Record<DateKey, string>;
+  /** importierter Plan; fehlt = Standardplan Marathon 2027 */
+  plan?: ImportedPlan | null;
+}
+
+export interface ImportedPlan {
+  source: 'lauftipps' | 'ics';
+  name: string;
+  /** ISO-Zeitstempel */
+  importedAt: string;
+  events: PlanEvent[];
 }

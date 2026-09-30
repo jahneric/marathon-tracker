@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { EXERCISES, MOBILITY, WORKOUTS, type WorkoutId } from '@/data/exercises';
 import { PHASES, RULES, type PhaseId } from '@/data/plan';
 import { formatDate } from '@/domain/dates';
-import { raceDate } from '@/domain/schedule';
+import { activePlan } from '@/domain/activePlan';
 import type { AppState } from '@/store/types';
 import { Card } from '@/ui/Card';
 import styles from './info.module.css';
@@ -33,9 +33,15 @@ function WorkoutTable({ id }: { id: WorkoutId }) {
 }
 
 export function InfoView({ state }: { state: AppState }) {
-  const { paces: P, goal, start } = state.settings;
+  const { paces: P, goal } = state.settings;
+  const plan = activePlan(state);
   return (
     <>
+      {plan.kind === 'imported' && (
+        <p className={styles.notice}>
+          Du nutzt den importierten Plan „{plan.name}“. Die Infos unten gehören zum Standardplan Marathon 2027 – die Regeln und Tempobereiche gelten aber allgemein.
+        </p>
+      )}
       <Card>
         <div className="row between">
           <div>
@@ -44,7 +50,7 @@ export function InfoView({ state }: { state: AppState }) {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div className="small muted">Marathon</div>
-            <div className={styles.date}>{formatDate(raceDate(start), { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}</div>
+            <div className={styles.date}>{plan.raceDate ? formatDate(plan.raceDate, { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) : '–'}</div>
           </div>
         </div>
         <p className="small muted" style={{ marginTop: 10 }}>

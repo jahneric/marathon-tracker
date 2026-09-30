@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import { EXERCISES, WEIGHTED_EXERCISES, type ExerciseId } from '@/data/exercises';
-import { PLAN } from '@/data/plan';
 import { formatDate, type DateKey } from '@/domain/dates';
 import { formatKm, formatPace, parseNum } from '@/domain/format';
 import { formatSets, painCounts, PAIN_LABEL, shoeKm, strengthHistory, totals, weekKm, weightSeries } from '@/domain/logs';
-import { weekInfo, weekStart } from '@/domain/schedule';
+import { activePlan, weekNumber } from '@/domain/activePlan';
 import type { AppState } from '@/store/types';
 import { Card } from '@/ui/Card';
 import { LineChart, WeeklyKmChart } from './charts';
@@ -12,12 +11,13 @@ import styles from './stats.module.css';
 
 export function StatsView({ state, today }: { state: AppState; today: DateKey }) {
   const t = useMemo(() => totals(state, today), [state, today]);
-  const current = weekInfo(state.settings.start, today).w;
+  const plan = activePlan(state);
+  const current = weekNumber(plan, today);
   const [exId, setExId] = useState<ExerciseId>('legpress');
 
-  const bars = PLAN.map(p => ({ w: p.w, planned: p.km, actual: weekKm(state, p.w), label: `(ab ${formatDate(weekStart(state.settings.start, p.w))})` }));
+  const bars = plan.weeks.map(wk => ({ w: wk.w, planned: wk.km, actual: weekKm(state, wk.start), label: `(ab ${formatDate(wk.start)})` }));
 
-  const weights = weightSeries(state).map(p => ({ x: `W${p.w}`, y: p.kg }));
+  const weights = weightSeries(state).map(p => ({ x: formatDate(p.monday), y: p.kg }));
   const firstW = weights[0]?.y, lastW = weights.at(-1)?.y;
 
   const strength = strengthHistory(state, exId).map(p => ({
@@ -36,7 +36,7 @@ export function StatsView({ state, today }: { state: AppState; today: DateKey })
         <Tile value={formatKm(t.longest)} label="längster Lauf (km)" />
         <Tile value={t.adherence != null ? `${Math.round(t.adherence * 100)} %` : '–'} label="Plantreue" />
         <Tile value={formatPace(t.recentPace)} label="Ø Pace 4 Wochen" />
-        <Tile value={String(t.daysToRace)} label="Tage bis Rennen" />
+        <Tile value={t.daysToRace != null ? String(t.daysToRace) : '–'} label="Tage bis Wettkampf" />
         <Tile value={String(t.kraft)} label="Krafteinheiten" />
         <Tile value={String(t.vb)} label={`Volleyball (${Math.round(t.vbHours)} h)`} />
         <Tile value={String(t.mob)} label="Mobility" />

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { PLAN } from '@/data/plan';
-import { defaultState } from '@/store/store';
+import { defaultState, normalize } from '@/store/store';
 import type { AppState } from '@/store/types';
+import { activePlan } from './activePlan';
 import { addDays } from './dates';
 import { formatPace, parseDuration } from './format';
-import { dayStatus, weightSeries } from './logs';
+import { parseIcs } from './ics';
+import { eventsToUnits, extractKm } from './importedPlan';
+import { dayStatus, dayUnits, weightSeries } from './logs';
 import { kmSplit, plannedUnits, raceDate, weekInfo } from './schedule';
 
 const START = '2026-09-28'; // Montag
@@ -77,10 +80,72 @@ describe('Tagesstatus', () => {
 describe('Gewicht', () => {
   it('nutzt Wochenwerte und fällt auf alte Tageswerte zurück', () => {
     const s = state({
-      weights: { 2: '74,5' },
+      weights: { [addDays(START, 7)]: '74,5' },
       days: { [addDays(START, 2)]: { u: {}, extra: [], well: { weight: '75' } } },
     });
-    expect(weightSeries(s)).toEqual([{ w: 1, kg: 75 }, { w: 2, kg: 74.5 }]);
+    expect(weightSeries(s)).toEqual([{ monday: START, kg: 75 }, { monday: addDays(START, 7), kg: 74.5 }]);
+  });
+
+  it('übernimmt alte Gewichte nach Wochennummer beim Laden', () => {
+    const s = normalize({ settings: { start: START }, days: {}, weights: { 2: '74,5' } });
+    expect(s.weights).toEqual({ [addDays(START, 7)]: '74,5' });
+  });
+});
+
+describe('Plan-Import (.ics)', () => {
+  const ICS = [
+    'BEGIN:VCALENDAR',
+    'X-WR-CALNAME:FlexMarathon',
+    'BEGIN:VEVENT',
+    'DTSTART;VALUE=DATE:20261006',
+    'SUMMARY:Longjog 12 km',
+    'DESCRIPTION:Ruhig laufen\\, Pace 6:10 min/km (9.7 km/h)\\nPuls 130-145',
+    'END:VEVENT',
+    'BEGIN:VEVENT',
+    'DTSTART:20261001T050000Z',
+    'SUMMARY:Tempo',
+    ' lauf 8 km',
+    'END:VEVENT',
+    'BEGIN:VEVENT',
+    'DTSTART;VALUE=DATE:20261004',
+    'SUMMARY:Ruhetag',
+    'END:VEVENT',
+    'BEGIN:VEVENT',
+    'DTSTART;VALUE=DATE:20270124',
+    'SUMMARY:Marathon',
+    'DESCRIPTION:42.2 km – viel Erfolg!',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+
+  it('liest Termine, entfaltet Zeilen und sortiert', () => {
+    const cal = parseIcs(ICS);
+    expect(cal.name).toBe('FlexMarathon');
+    expect(cal.events.map(e => [e.date, e.title])).toEqual([
+      ['2026-10-01', 'Tempolauf 8 km'],
+      ['2026-10-04', 'Ruhetag'],
+      ['2026-10-06', 'Longjog 12 km'],
+      ['2027-01-24', 'Marathon'],
+    ]);
+    expect(cal.events[2]!.description).toBe('Ruhig laufen, Pace 6:10 min/km (9.7 km/h)\nPuls 130-145');
+  });
+
+  it('erkennt Art, km und Wettkampf', () => {
+    expect(extractKm('Pace 9.7 km/h', 'Longjog 12,5 km')).toBe(12.5);
+    const { byDate, raceDate } = eventsToUnits(parseIcs(ICS).events);
+    expect(byDate.get('2026-10-01')![0]).toMatchObject({ type: 'run', target: 8 });
+    expect(byDate.get('2026-10-04')![0]!.type).toBe('rest');
+    expect(raceDate).toBe('2027-01-24');
+  });
+
+  it('baut Wochen ab dem Montag der ersten Einheit', () => {
+    const s = state({ plan: { source: 'ics', name: 'Test', importedAt: '', events: parseIcs(ICS).events } });
+    const plan = activePlan(s);
+    expect(plan.start).toBe('2026-09-28');
+    expect(plan.weeks[0]).toMatchObject({ w: 1, km: 8 });
+    expect(plan.weeks[1]).toMatchObject({ w: 2, km: 12 });
+    expect(dayUnits(s, '2026-10-06')[0]!.title).toBe('Longjog 12 km');
+    expect(plan.supportsTournaments).toBe(false);
   });
 });
 

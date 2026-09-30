@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { DateKey } from '@/domain/dates';
 import { dayUnits } from '@/domain/logs';
-import { weekInfo } from '@/domain/schedule';
+import { activePlan, planWeek, weekNumber } from '@/domain/activePlan';
 import type { AppState } from '@/store/types';
 import { AddUnit } from './AddUnit';
 import { DayNav } from './DayNav';
@@ -25,13 +25,14 @@ export function TodayView({ state, today, date }: Props) {
 function DayPage({ state, today, date }: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const units = dayUnits(state, date);
-  const { w, plan } = weekInfo(state.settings.start, date);
+  const plan = activePlan(state);
+  const week = planWeek(plan, weekNumber(plan, date));
 
   return (
     <>
       <DayNav state={state} today={today} date={date} />
       <PainAlert state={state} date={date} />
-      {plan && <WeekCard state={state} week={w} plan={plan} />}
+      {week && <WeekCard state={state} plan={plan} week={week} />}
       <DayStatusCard state={state} today={today} date={date} units={units} />
       {units.map(u => (
         <UnitCard

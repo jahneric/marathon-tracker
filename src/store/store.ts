@@ -1,6 +1,7 @@
 import { produce } from 'immer';
 import { useSyncExternalStore } from 'react';
 import { DEFAULT_PACES } from '@/data/plan';
+import { addDays } from '@/domain/dates';
 import type { AppState } from './types';
 
 const STORAGE_KEY = 'mt27';
@@ -12,6 +13,7 @@ export const defaultState = (): AppState => ({
   tournaments: {},
   shoes: [],
   weights: {},
+  plan: null,
 });
 
 /** Füllt fehlende Felder auf (ältere Stände, importierte Backups) */
@@ -19,16 +21,27 @@ export function normalize(raw: unknown): AppState {
   const d = defaultState();
   if (!raw || typeof raw !== 'object') return d;
   const s = raw as Partial<AppState>;
+  const settings = { ...d.settings, ...s.settings, paces: { ...d.settings.paces, ...s.settings?.paces } };
   return {
     ...d,
     ...s,
     v: 1,
-    settings: { ...d.settings, ...s.settings, paces: { ...d.settings.paces, ...s.settings?.paces } },
+    settings,
     days: s.days ?? {},
     tournaments: s.tournaments ?? {},
     shoes: s.shoes ?? [],
-    weights: s.weights ?? {},
+    weights: migrateWeights(s.weights ?? {}, settings.start),
+    plan: s.plan ?? null,
   };
+}
+
+/** Früher waren Gewichte nach Wochennummer gespeichert, jetzt nach Montag der Kalenderwoche */
+function migrateWeights(weights: Record<string, string>, start: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(weights)) {
+    out[/^-?\d+$/.test(k) ? addDays(start, (Number(k) - 1) * 7) : k] = v;
+  }
+  return out;
 }
 
 export const isBackup = (raw: unknown): boolean =>

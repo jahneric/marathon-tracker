@@ -102,6 +102,15 @@
   to { opacity: 1; transform: none; }
 }
 
+.info {
+  white-space: pre-line;
+  font-size: 13.5px;
+  color: var(--text-2);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
 .noteField { display: flex; flex-direction: column; gap: 6px; }
 .noteField > span { font-size: 12.5px; font-weight: 550; color: var(--text-2); }
 

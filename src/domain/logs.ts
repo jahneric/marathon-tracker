@@ -2,7 +2,7 @@ import { exercise, MOBILITY } from '@/data/exercises';
 import type { AppState, DayLog, PainLevel, PainSpot, SetLog, Unit, UnitLog, UnitType } from '@/store/types';
 import { addDays, daysBetween, type DateKey } from './dates';
 import { formatDuration, formatKm, formatPace, parseDuration, parseNum } from './format';
-import { plannedUnits, raceDate, weekStart } from './schedule';
+import { activePlan, mondayOf } from './activePlan';
 
 export const FEEL = ['sehr schwer', 'schwer', 'okay', 'gut', 'super'] as const;
 
@@ -13,7 +13,7 @@ export const PAIN_LABEL: Record<PainSpot, string> = {
 
 export const isDone = (l: UnitLog | null | undefined): boolean => l?.status === 'done';
 
-export const dayUnits = (s: AppState, k: DateKey): Unit[] => plannedUnits(s, k).concat(s.days[k]?.extra ?? []);
+export const dayUnits = (s: AppState, k: DateKey): Unit[] => activePlan(s).units(k).concat(s.days[k]?.extra ?? []);
 
 export const unitLog = (s: AppState, k: DateKey, id: string): UnitLog | undefined => s.days[k]?.u[id];
 
@@ -48,11 +48,11 @@ export function runKmByDay(s: AppState): Map<DateKey, number> {
   return m;
 }
 
-export function weekKm(s: AppState, w: number): number {
+/** Gelaufene km in der Woche ab dem Montag `monday` */
+export function weekKm(s: AppState, monday: DateKey): number {
   const byDay = runKmByDay(s);
-  const ws = weekStart(s.settings.start, w);
   let sum = 0;
-  for (let i = 0; i < 7; i++) sum += byDay.get(addDays(ws, i)) ?? 0;
+  for (let i = 0; i < 7; i++) sum += byDay.get(addDays(monday, i)) ?? 0;
   return sum;
 }
 
@@ -143,7 +143,7 @@ export interface Totals {
   adherence: number | null;
   /** Ø Pace der letzten 28 Tage in s/km */
   recentPace: number | null;
-  daysToRace: number;
+  daysToRace: number | null;
 }
 
 export function totals(s: AppState, today: DateKey): Totals {
@@ -156,9 +156,9 @@ export function totals(s: AppState, today: DateKey): Totals {
   const rs = recent.reduce((a, x) => a + parseDuration(x.log.dur)!, 0);
 
   let planned = 0, did = 0;
-  const race = raceDate(s.settings.start);
-  for (let k = s.settings.start; k < today && k <= race; k = addDays(k, 1)) {
-    for (const u of plannedUnits(s, k)) {
+  const plan = activePlan(s);
+  for (let k = plan.start; k < today && k <= plan.end; k = addDays(k, 1)) {
+    for (const u of plan.units(k)) {
       if (u.type === 'rest' || u.optional) continue;
       planned++;
       if (isDone(unitLog(s, k, u.id))) did++;
@@ -175,7 +175,7 @@ export function totals(s: AppState, today: DateKey): Totals {
     mob: doneOf('mob').length,
     adherence: planned ? did / planned : null,
     recentPace: rk ? rs / rk : null,
-    daysToRace: Math.max(0, daysBetween(race, today)),
+    daysToRace: plan.raceDate ? Math.max(0, daysBetween(plan.raceDate, today)) : null,
   };
 }
 
@@ -219,20 +219,20 @@ export function dayStatus(s: AppState, k: DateKey, today: DateKey): DayStatus {
   return { state, required: required.length, done, skipped };
 }
 
-export interface WeightPoint { w: number; kg: number }
+export interface WeightPoint { monday: DateKey; kg: number }
 
-/** Gewicht pro Woche; ohne Wocheneintrag wird das zuletzt im Befinden eingetragene Tagesgewicht verwendet */
+/** Gewicht pro Kalenderwoche; ohne Wocheneintrag zählt das zuletzt im Befinden eingetragene Tagesgewicht */
 export function weightSeries(s: AppState): WeightPoint[] {
-  const out = new Map<number, number>();
+  const out = new Map<DateKey, number>();
   for (const k of Object.keys(s.days).sort()) {
     const kg = parseNum(s.days[k]?.well.weight);
-    if (kg) out.set(Math.floor(daysBetween(k, s.settings.start) / 7) + 1, kg);
+    if (kg) out.set(mondayOf(k), kg);
   }
-  for (const [w, v] of Object.entries(s.weights)) {
+  for (const [monday, v] of Object.entries(s.weights)) {
     const kg = parseNum(v);
-    if (kg) out.set(Number(w), kg);
+    if (kg) out.set(monday, kg);
   }
-  return [...out].map(([w, kg]) => ({ w, kg })).sort((a, b) => a.w - b.w);
+  return [...out].map(([monday, kg]) => ({ monday, kg })).sort((a, b) => (a.monday < b.monday ? -1 : 1));
 }
 
 export interface StrengthPoint { k: DateKey; kg: number; sets: (SetLog | null)[] }

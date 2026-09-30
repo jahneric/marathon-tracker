@@ -70,6 +70,7 @@ export function UnitCard({ state, date, unit: u, open, onToggle }: Props) {
 
       {open && !isRest && (
         <div className={styles.form}>
+          {u.info && u.info !== u.detail && <p className={styles.info}>{u.info}</p>}
           {u.type === 'run' && <RunForm state={state} date={date} unit={u} log={log ?? {}} />}
           {u.type === 'kraft' && <KraftForm state={state} date={date} unit={u} log={log ?? {}} />}
           {u.type === 'vb' && <VolleyForm date={date} unit={u} log={log ?? {}} />}

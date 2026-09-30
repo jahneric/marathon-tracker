@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, formatDate, WEEKDAYS, WEEKDAYS_LONG, weekday, type DateKey } from '@/domain/dates';
 import { dayStatus } from '@/domain/logs';
-import { weekInfo } from '@/domain/schedule';
+import { activePlan, planWeek, weekNumber } from '@/domain/activePlan';
 import { navigate } from '@/hooks/useRoute';
 import type { AppState } from '@/store/types';
 import { Button, IconButton } from '@/ui/Button';
@@ -10,7 +10,8 @@ import styles from './DayNav.module.css';
 const go = (date: DateKey, today: DateKey) => navigate({ tab: 'heute', date: date === today ? undefined : date }, { replace: true });
 
 export function DayNav({ state, today, date }: { state: AppState; today: DateKey; date: DateKey }) {
-  const { w, plan } = weekInfo(state.settings.start, date);
+  const plan = activePlan(state);
+  const w = weekNumber(plan, date);
   const monday = addDays(date, -weekday(date));
   const isToday = date === today;
 
@@ -25,7 +26,7 @@ export function DayNav({ state, today, date }: { state: AppState; today: DateKey
             {isToday ? 'Heute' : WEEKDAYS_LONG[weekday(date)]}, {formatDate(date, { day: 'numeric', month: 'long' })}
           </div>
           <div className="small muted">
-            {plan ? `Woche ${w}` : w < 1 ? 'vor Planstart' : 'nach dem Plan'}
+            {planWeek(plan, w) ? `Woche ${w}` : w < 1 ? 'vor Planstart' : 'nach dem Plan'}
             {!isToday && (
               <>
                 {' · '}

@@ -4,7 +4,7 @@ import type { DateKey } from '@/domain/dates';
 import { formatKm } from '@/domain/format';
 import { emptyDay } from '@/domain/logs';
 import { defaultState, normalize, replaceState, update } from './store';
-import type { AppState, DayLog, PainLevel, PainSpot, SetLog, Settings, Unit, UnitLog, UnitType, Wellbeing } from './types';
+import type { AppState, DayLog, ImportedPlan, PainLevel, PainSpot, SetLog, Settings, Unit, UnitLog, UnitType, Wellbeing } from './types';
 
 const uid = (prefix: string) => prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
@@ -134,10 +134,23 @@ export function cyclePain(k: DateKey, spot: PainSpot) {
   });
 }
 
-export function setWeekWeight(w: number, kg: string) {
+/** Körpergewicht der Kalenderwoche ab `monday` */
+export function setWeekWeight(monday: DateKey, kg: string) {
   update(s => {
-    if (kg.trim()) s.weights[w] = kg.trim();
-    else delete s.weights[w];
+    if (kg.trim()) s.weights[monday] = kg.trim();
+    else delete s.weights[monday];
+  });
+}
+
+export function setImportedPlan(plan: ImportedPlan) {
+  update(s => {
+    s.plan = plan;
+  });
+}
+
+export function resetToStandardPlan() {
+  update(s => {
+    s.plan = null;
   });
 }
 
