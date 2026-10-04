@@ -1,4 +1,4 @@
-import { Check, Minus, Pencil, Trash2, X } from 'lucide-react';
+import { Check, Minus, Pencil, Trash2, X } from '@/ui/icons';
 import type { DateKey } from '@/domain/dates';
 import { summarize, unitLog } from '@/domain/logs';
 import { removeExtra, setLogField, setStatus, toggleDone } from '@/store/actions';

@@ -13,8 +13,10 @@
     "icons": "pwa-assets-generator"
   },
   "dependencies": {
+    "@iconify-icons/material-symbols": "^2.0.5",
+    "@iconify-icons/solar": "^2.0.4",
+    "@iconify/react": "^6.0.2",
     "immer": "^11.1.18",
-    "lucide-react": "^1.48.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },

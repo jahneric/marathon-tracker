@@ -1,4 +1,4 @@
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert } from '@/ui/icons';
 import type { DateKey } from '@/domain/dates';
 import { PAIN_LABEL, recentPain } from '@/domain/logs';
 import type { AppState } from '@/store/types';

@@ -1,6 +1,6 @@
-import { Check, Pause, Play } from 'lucide-react';
+import { Check, Info, Pause, Play, PlayCircle } from '@/ui/icons';
 import { useEffect, useRef, useState } from 'react';
-import { MOBILITY, type MobilityDrill } from '@/data/exercises';
+import { MOBILITY, videoUrl, type MobilityDrill } from '@/data/exercises';
 import type { DateKey } from '@/domain/dates';
 import { formatDuration } from '@/domain/format';
 import { beep, vibrate } from '@/lib/signals';
@@ -11,31 +11,45 @@ import styles from './forms.module.css';
 
 export function MobilityForm({ date, unit: u, log: l }: { date: DateKey; unit: Unit; log: Partial<UnitLog> }) {
   const [running, setRunning] = useState<string | null>(null);
+  const [help, setHelp] = useState<string | null>(null);
   const m = l.m ?? {};
 
   return (
     <>
       <div className={styles.mobList}>
         {MOBILITY.map(x => (
-          <div key={x.id} className={styles.mobItem}>
-            <button type="button" className={styles.mobCheck} aria-pressed={!!m[x.id]} aria-label={`${x.name} erledigt`} onClick={() => toggleMobility(date, u, x.id)}>
-              <Check />
-            </button>
-            <div className="grow">
-              <div className={styles.mobName}>{x.name}</div>
-              <div className="tiny muted">{x.amount}</div>
+          <div key={x.id} className={styles.mobRow}>
+            <div className={styles.mobItem}>
+              <button type="button" className={styles.mobCheck} aria-pressed={!!m[x.id]} aria-label={`${x.name} erledigt`} onClick={() => toggleMobility(date, u, x.id)}>
+                <Check />
+              </button>
+              <div className="grow">
+                <div className={styles.mobName}>{x.name}</div>
+                <div className="tiny muted">{x.amount}</div>
+              </div>
+              <button type="button" className={styles.mobHelp} aria-expanded={help === x.id} aria-label={`Anleitung für ${x.name}`} onClick={() => setHelp(h => (h === x.id ? null : x.id))}>
+                <Info />
+              </button>
+              {x.sec && (
+                <DrillTimer
+                  drill={x}
+                  running={running === x.id}
+                  onStart={() => setRunning(x.id)}
+                  onStop={() => setRunning(null)}
+                  onFinish={() => {
+                    setRunning(null);
+                    toggleMobility(date, u, x.id, true);
+                  }}
+                />
+              )}
             </div>
-            {x.sec && (
-              <DrillTimer
-                drill={x}
-                running={running === x.id}
-                onStart={() => setRunning(x.id)}
-                onStop={() => setRunning(null)}
-                onFinish={() => {
-                  setRunning(null);
-                  toggleMobility(date, u, x.id, true);
-                }}
-              />
+            {help === x.id && (
+              <div className={styles.mobHow}>
+                <p>{x.how}</p>
+                <a href={videoUrl(x.video)} target="_blank" rel="noopener noreferrer">
+                  <PlayCircle aria-hidden /> Beispielvideos ansehen
+                </a>
+              </div>
             )}
           </div>
         ))}

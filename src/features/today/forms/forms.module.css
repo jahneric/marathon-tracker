@@ -49,15 +49,38 @@
 
 /* Mobility */
 .mobList { display: flex; flex-direction: column; }
-.mobItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+.mobRow { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.mobRow:first-child { padding-top: 0; }
+.mobRow:last-child { border-bottom: 0; }
+.mobItem { display: flex; align-items: center; gap: 12px; }
+.mobHelp {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
 }
-.mobItem:first-child { padding-top: 0; }
-.mobItem:last-child { border-bottom: 0; }
+.mobHelp:hover, .mobHelp[aria-expanded='true'] { background: var(--surface-2); color: var(--text); }
+.mobHelp svg { width: 20px; height: 20px; }
+.mobHow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 2px 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.mobHow a { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; }
+.mobHow a:hover { text-decoration: underline; }
+.mobHow svg { width: 18px; height: 18px; }
 .mobName { font-weight: 550; }
 
 .mobCheck {

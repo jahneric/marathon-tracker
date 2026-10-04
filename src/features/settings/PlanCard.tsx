@@ -1,4 +1,4 @@
-import { CalendarPlus, ExternalLink, RotateCcw } from 'lucide-react';
+import { CalendarPlus, ExternalLink, RotateCcw } from '@/ui/icons';
 import type { ChangeEvent } from 'react';
 import { activePlan } from '@/domain/activePlan';
 import { formatDate, weekday } from '@/domain/dates';

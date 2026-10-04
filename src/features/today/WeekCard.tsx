@@ -1,4 +1,4 @@
-import { Pin, TriangleAlert } from 'lucide-react';
+import { Pin, TriangleAlert } from '@/ui/icons';
 import type { ActivePlan, PlanWeekView } from '@/domain/activePlan';
 import { formatKm } from '@/domain/format';
 import { weekKm } from '@/domain/logs';

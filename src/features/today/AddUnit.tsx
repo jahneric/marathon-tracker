@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-react';
+import { Plus, X } from '@/ui/icons';
 import { useState } from 'react';
 import type { DateKey } from '@/domain/dates';
 import { addExtra } from '@/store/actions';

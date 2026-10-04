@@ -1,4 +1,4 @@
-import { ChevronDown, Pin, Scale } from 'lucide-react';
+import { ChevronDown, Pin, Scale } from '@/ui/icons';
 import type { ActivePlan, PlanWeekView } from '@/domain/activePlan';
 import { addDays, formatDate, WEEKDAYS, type DateKey } from '@/domain/dates';
 import { formatKm } from '@/domain/format';

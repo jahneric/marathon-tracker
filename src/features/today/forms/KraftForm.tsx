@@ -1,5 +1,5 @@
-import { Plus } from 'lucide-react';
-import { EXERCISES, isWorkoutId, KRAFT_PHASES, prescription, workoutExercises, WORKOUTS, type ExerciseId, type KraftPhaseId, type WorkoutId } from '@/data/exercises';
+import { Plus } from '@/ui/icons';
+import { EXERCISES, isWorkoutId, KRAFT_PHASES, prescription, videoUrl, workoutExercises, WORKOUTS, type Exercise, type ExerciseId, type KraftPhaseId, type WorkoutId } from '@/data/exercises';
 import { activePlan, kraftPhaseAt } from '@/domain/activePlan';
 import { formatDate, type DateKey } from '@/domain/dates';
 import { formatSets, lastSets } from '@/domain/logs';
@@ -49,7 +49,7 @@ export function KraftForm({ state, date, unit: u, log: l }: Props) {
 }
 
 function ExerciseBlock({ state, date, unit: u, log: l, exId, phase }: Props & { exId: ExerciseId; phase: KraftPhaseId }) {
-  const e = EXERCISES[exId];
+  const e: Exercise = EXERCISES[exId];
   const sets = l.ex?.[exId] ?? [];
   const rx = prescription(exId, phase);
   const n = Math.max(rx.sets, sets.length);
@@ -67,6 +67,12 @@ function ExerciseBlock({ state, date, unit: u, log: l, exId, phase }: Props & { 
           <>
             {' · '}
             <b className="text-2">Zuletzt ({formatDate(last.k)}):</b> {formatSets(last.sets, e.kind)}
+          </>
+        )}
+        {e.video && (
+          <>
+            {' · '}
+            <a href={videoUrl(e.video)} target="_blank" rel="noopener noreferrer">Video</a>
           </>
         )}
       </p>

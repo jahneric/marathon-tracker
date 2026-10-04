@@ -1,4 +1,4 @@
-import { CircleCheck, CircleDashed, CircleX, CircleDot, Moon } from 'lucide-react';
+import { CircleCheck, CircleDashed, CircleX, CircleDot, Moon } from '@/ui/icons';
 import type { DateKey } from '@/domain/dates';
 import { dayStatus, type DayState } from '@/domain/logs';
 import { markDayDone } from '@/store/actions';

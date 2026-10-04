@@ -11,34 +11,36 @@ export interface Exercise {
   load?: 'main' | 'acc';
   /** Wiederholungen pro Seite */
   side?: boolean;
+  /** Suchbegriff für ein Beispielvideo */
+  video?: string;
 }
 
 export const EXERCISES = {
-  warmA: { name: 'Goblet Squat Hold, Cossack Squat, tiefer Split Squat', sets: 2, reps: 'je 2 Sätze', kind: 'c', hint: 'Aufwärmen / Mobility mit Gewicht' },
-  shortfoot: { name: 'Short Foot – Fußgewölbe aufrichten', sets: 2, reps: '8 × 5 s / Seite', kind: 'c', hint: 'barfuß, Großzehenballen Richtung Ferse ziehen, Zehen bleiben lang und locker' },
-  heelball: { name: 'Fersenheben mit Ball zwischen den Fersen', sets: 2, reps: '12', kind: 'c', hint: 'Ball zusammendrücken, Fersen kippen oben nicht nach außen – Tibialis posterior' },
-  footadd: { name: 'Fuß einwärts drehen gegen Band', sets: 2, reps: '15 / Seite', kind: 'c', hint: 'nur der Fuß bewegt sich, Knie bleibt still – stützt das Sprunggelenk innen' },
-  balance: { name: 'Einbeinstand mit aktivem Gewölbe', sets: 2, reps: '30 s / Seite', kind: 'c', hint: 'Knöchel bleibt über dem Fuß und kippt nicht nach innen' },
+  warmA: { name: 'Goblet Squat Hold, Cossack Squat, tiefer Split Squat', sets: 2, reps: 'je 2 Sätze', kind: 'c', hint: 'Aufwärmen / Mobility mit Gewicht', video: 'cossack squat goblet squat hold' },
+  shortfoot: { name: 'Short Foot – Fußgewölbe aufrichten', sets: 2, reps: '8 × 5 s / Seite', kind: 'c', hint: 'barfuß, Großzehenballen Richtung Ferse ziehen, Zehen bleiben lang und locker', video: 'short foot exercise' },
+  heelball: { name: 'Fersenheben mit Ball zwischen den Fersen', sets: 2, reps: '12', kind: 'c', hint: 'Ball zusammendrücken, Fersen kippen oben nicht nach außen – Tibialis posterior', video: 'heel raise ball between heels tibialis posterior' },
+  footadd: { name: 'Fuß einwärts drehen gegen Band', sets: 2, reps: '15 / Seite', kind: 'c', hint: 'nur der Fuß bewegt sich, Knie bleibt still – stützt das Sprunggelenk innen', video: 'banded ankle inversion tibialis posterior' },
+  balance: { name: 'Einbeinstand mit aktivem Gewölbe', sets: 2, reps: '30 s / Seite', kind: 'c', hint: 'Knöchel bleibt über dem Fuß und kippt nicht nach innen', video: 'single leg balance short foot arch' },
   jumps: { name: 'Sprünge: Pogo Hops + Box Jumps', sets: 3, reps: '6–8', kind: 'c', hint: 'frisch und explosiv, volle Pause – Qualität vor Menge' },
   legpress: { name: 'Beinpresse', sets: 4, reps: '6–8', kind: 'w', hint: 'Hauptübung, tief und über die volle Bewegungsweite', load: 'main' },
   legext: { name: 'Beinstrecker', sets: 3, reps: '8–10', kind: 'w', hint: 'kontrolliert absenken', load: 'acc' },
   legcurl: { name: 'Beinbeuger', sets: 3, reps: '8–10', kind: 'w', hint: 'kontrolliert absenken', load: 'acc' },
   calfpress: { name: 'Wadenpresse', sets: 4, reps: '8–10', kind: 'w', hint: 'volle Bewegungsweite, unten kurz halten', load: 'acc' },
-  tibialis: { name: 'Tibialis Raises', sets: 2, reps: '15', kind: 'w', hint: 'Schienbeinschutz für Laufen und Sand' },
-  pistol: { name: 'Einbeinige Kniebeuge', sets: 4, reps: '5–6 / Seite', kind: 'w', hint: 'anfangs auf Box oder mit Halt, später tiefer und mit Zusatzgewicht', load: 'main', side: true },
-  airplane: { name: 'Hüftrotationen (Hip Airplanes)', sets: 3, reps: '5 / Seite', kind: 'w', hint: 'langsam, Becken kontrolliert öffnen und schließen' },
-  copenhagen: { name: 'Copenhagen Plank', sets: 3, reps: '20–30 s / Seite', kind: 's', hint: 'Adduktoren, Hebel mit der Zeit verlängern' },
+  tibialis: { name: 'Tibialis Raises', sets: 2, reps: '15', kind: 'w', hint: 'Schienbeinschutz für Laufen und Sand', video: 'tibialis raise' },
+  pistol: { name: 'Einbeinige Kniebeuge', sets: 4, reps: '5–6 / Seite', kind: 'w', hint: 'anfangs auf Box oder mit Halt, später tiefer und mit Zusatzgewicht', load: 'main', side: true, video: 'box pistol squat progression' },
+  airplane: { name: 'Hüftrotationen (Hip Airplanes)', sets: 3, reps: '5 / Seite', kind: 'w', hint: 'langsam, Becken kontrolliert öffnen und schließen', video: 'hip airplane exercise' },
+  copenhagen: { name: 'Copenhagen Plank', sets: 3, reps: '20–30 s / Seite', kind: 's', hint: 'Adduktoren, Hebel mit der Zeit verlängern', video: 'copenhagen plank' },
   calfsingle: { name: 'Wadenheben einbeinig', sets: 3, reps: '10–12', kind: 'w', hint: 'auf Stufe, später mit Kurzhantel', load: 'acc' },
-  pallof: { name: 'Pallof Press', sets: 3, reps: '3 Sätze', kind: 'w', hint: 'Core' },
-  sideplank: { name: 'Side Plank', sets: 3, reps: '3 Sätze', kind: 's', hint: 'Core' },
-  extrot: { name: 'Außenrotation mit Band', sets: 2, reps: '15', kind: 'c', hint: 'Aufwärmen, Schulter-Prehab – fest drin lassen' },
+  pallof: { name: 'Pallof Press', sets: 3, reps: '3 Sätze', kind: 'w', hint: 'Core', video: 'pallof press' },
+  sideplank: { name: 'Side Plank', sets: 3, reps: '3 Sätze', kind: 's', hint: 'Core', video: 'side plank' },
+  extrot: { name: 'Außenrotation mit Band', sets: 2, reps: '15', kind: 'c', hint: 'Aufwärmen, Schulter-Prehab – fest drin lassen', video: 'banded shoulder external rotation' },
   pullup: { name: 'Klimmzüge', sets: 4, reps: '6–8', kind: 'w', hint: 'Band (negatives kg) oder Zusatzgewicht so wählen, dass der Wdh.-Bereich sauber klappt · Griff wöchentlich wechseln', load: 'main' },
   rowclose: { name: 'Rudern eng (Kabel / Maschine)', sets: 3, reps: '6–8', kind: 'w', hint: 'Ellbogen nah am Körper', load: 'acc' },
   rowwide: { name: 'Rudern breit (Kabel / Maschine)', sets: 3, reps: '10–12', kind: 'w', hint: 'Ellbogen nach außen – hintere Schulter', load: 'acc' },
   revfly: { name: 'Reverse Butterfly', sets: 3, reps: '12–15', kind: 'w', hint: 'mäßiges Gewicht, sauber und langsam', load: 'acc' },
-  deadbug: { name: 'Dead Bug', sets: 3, reps: '3 Sätze', kind: 'c', hint: 'Core' },
-  hollow: { name: 'Hollow Hold', sets: 3, reps: '3 Sätze', kind: 's', hint: 'Core' },
-  hipfin: { name: 'Hüft-Finisher: Monster Walks, Clamshells', sets: 2, reps: 'je 15', kind: 'c', hint: 'optional, 5 min, Hüftstabilität' },
+  deadbug: { name: 'Dead Bug', sets: 3, reps: '3 Sätze', kind: 'c', hint: 'Core', video: 'dead bug exercise' },
+  hollow: { name: 'Hollow Hold', sets: 3, reps: '3 Sätze', kind: 's', hint: 'Core', video: 'hollow hold' },
+  hipfin: { name: 'Hüft-Finisher: Monster Walks, Clamshells', sets: 2, reps: 'je 15', kind: 'c', hint: 'optional, 5 min, Hüftstabilität', video: 'monster walk clamshell band' },
   bench: { name: 'Bankdrücken', sets: 4, reps: '6–8', kind: 'w', hint: 'Hauptübung', load: 'main' },
   dips: { name: 'Dips', sets: 3, reps: '6–10', kind: 'w', hint: 'Oberkörper leicht nach vorn, nur schmerzfrei tief; ggf. Zusatzgewicht', load: 'acc' },
   ohp: { name: 'Schulterdrücken', sets: 3, reps: '8', kind: 'w', hint: 'Kurzhantel oder Langhantel', load: 'acc' },
@@ -46,6 +48,9 @@ export const EXERCISES = {
 } as const satisfies Record<string, Exercise>;
 
 export type ExerciseId = keyof typeof EXERCISES;
+
+/** Beispielvideos: YouTube-Suche zum Begriff (bleibt aktuell, auch wenn einzelne Videos verschwinden) */
+export const videoUrl = (query: string): string => `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 
 export const exercise = (id: string): Exercise | undefined => (EXERCISES as Record<string, Exercise>)[id];
 
@@ -120,15 +125,35 @@ export interface MobilityDrill {
   /** Haltedauer pro Seite in Sekunden (falls ein Timer sinnvoll ist) */
   sec?: number;
   sides?: boolean;
+  /** Kurzanleitung */
+  how: string;
+  /** Suchbegriff für ein Beispielvideo */
+  video: string;
 }
 
 export const MOBILITY: MobilityDrill[] = [
-  { id: 'm9090', name: '90/90 Sitz mit Seitenwechsel', amount: '2 min', sec: 120 },
-  { id: 'mirlift', name: '90/90 Innenrotation: hinteren Fuß aktiv abheben', amount: '8 / Seite, oben 2 s halten' },
-  { id: 'miriso', name: 'Innenrotation im Sitzen: Fuß gegen Widerstand nach außen drücken', amount: '5 × 10 s / Seite' },
-  { id: 'mcouch', name: 'Couch Stretch (Hüftbeuger)', amount: '1–2 min / Seite', sec: 90, sides: true },
-  { id: 'mfrog', name: 'Frog Stretch', amount: '1–2 min', sec: 90 },
-  { id: 'mpigeon', name: 'Taube (Pigeon)', amount: '1 min / Seite', sec: 60, sides: true },
-  { id: 'mwgs', name: "World's Greatest Stretch", amount: '5 / Seite' },
-  { id: 'mcars', name: 'Hip CARs im Vierfüßlerstand', amount: '5 / Richtung und Seite' },
+  { id: 'm9090', name: '90/90 Sitz mit Seitenwechsel', amount: '2 min', sec: 120,
+    how: 'Sitzen, beide Knie 90° gebeugt: ein Bein vorn, eins seitlich. Aufrecht bleiben und beide Knie langsam zur anderen Seite kippen. Anfangs dürfen die Hände hinten stützen.',
+    video: '90 90 hip switches' },
+  { id: 'mirlift', name: '90/90 Innenrotation: hinteren Fuß aktiv abheben', amount: '8 / Seite, oben 2 s halten',
+    how: 'Im 90/90-Sitz aufrecht bleiben. Den Fuß des hinteren Beins vom Boden abheben, ohne dass das Knie mitkommt oder der Oberkörper wegkippt. Oben 2 s halten, langsam ablegen. Eine kleine Bewegung ist normal.',
+    video: '90 90 hip internal rotation lift off' },
+  { id: 'miriso', name: 'Innenrotation im Sitzen: Fuß gegen Widerstand nach außen drücken', amount: '5 × 10 s / Seite',
+    how: 'Auf einem Stuhl sitzen, Knie 90°. Das Knie bleibt ruhig, der Fuß drückt nach außen gegen einen festen Widerstand (Tischbein, Band oder Hand). 10 s mit etwa 70 % Kraft halten, lösen.',
+    video: 'seated hip internal rotation isometric' },
+  { id: 'mcouch', name: 'Couch Stretch (Hüftbeuger)', amount: '1–2 min / Seite', sec: 90, sides: true,
+    how: 'Hinteres Knie dicht an Wand oder Sofa, Schienbein zeigt nach oben, vorderes Bein im Ausfallschritt. Gesäß anspannen, Becken nach hinten kippen und Oberkörper aufrichten. Dehnung vorn an Hüfte und Oberschenkel.',
+    video: 'couch stretch hip flexor' },
+  { id: 'mfrog', name: 'Frog Stretch', amount: '1–2 min', sec: 90,
+    how: 'Vierfüßlerstand, Knie weit auseinander, Unterschenkel parallel, Füße zeigen nach außen. Gesäß langsam Richtung Fersen schieben, Rücken gerade lassen. Dehnung an der Innenseite der Oberschenkel.',
+    video: 'frog stretch adductors' },
+  { id: 'mpigeon', name: 'Taube (Pigeon)', amount: '1 min / Seite', sec: 60, sides: true,
+    how: 'Vorderes Bein angewinkelt quer vor dem Körper, hinteres Bein lang nach hinten. Becken gerade halten und den Oberkörper nach vorn sinken lassen. Dehnung im Gesäß, kein Schmerz im Knie.',
+    video: 'pigeon stretch' },
+  { id: 'mwgs', name: "World's Greatest Stretch", amount: '5 / Seite',
+    how: 'Tiefer Ausfallschritt, beide Hände innen neben dem vorderen Fuß. Den inneren Ellbogen Richtung Boden senken, dann denselben Arm zur Decke aufdrehen und hinterherschauen. Zurück und wiederholen.',
+    video: "world's greatest stretch" },
+  { id: 'mcars', name: 'Hip CARs im Vierfüßlerstand', amount: '5 / Richtung und Seite',
+    how: 'Im Vierfüßlerstand ein Knie anheben und damit den größtmöglichen Kreis zeichnen: nach vorn, zur Seite, nach hinten, zurück. Rumpf und Becken bleiben still, langsam und kontrolliert.',
+    video: 'quadruped hip CARs' },
 ];

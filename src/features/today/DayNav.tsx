@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '@/ui/icons';
 import { addDays, formatDate, WEEKDAYS, WEEKDAYS_LONG, weekday, type DateKey } from '@/domain/dates';
 import { dayStatus } from '@/domain/logs';
 import { activePlan, planWeek, weekNumber } from '@/domain/activePlan';

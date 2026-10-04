@@ -1,4 +1,4 @@
-import { Download, Monitor, Moon, Plus, Sun, Trash2, Upload } from 'lucide-react';
+import { Download, Monitor, Moon, Plus, Sun, Trash2, Upload } from '@/ui/icons';
 import { useState, type ChangeEvent } from 'react';
 import type { Paces } from '@/data/plan';
 import { todayKey } from '@/domain/dates';

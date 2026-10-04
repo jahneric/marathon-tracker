@@ -1,4 +1,4 @@
-import { Flag } from 'lucide-react';
+import { Flag } from '@/ui/icons';
 import { activePlan, planWeek, weekNumber } from '@/domain/activePlan';
 import { daysBetween, type DateKey } from '@/domain/dates';
 import type { AppState } from '@/store/types';

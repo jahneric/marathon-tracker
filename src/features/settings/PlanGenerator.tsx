@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { mondayOf } from '@/domain/activePlan';
 import { addDays, formatDate, todayKey, weekday } from '@/domain/dates';
