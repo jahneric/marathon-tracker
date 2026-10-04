@@ -20,11 +20,11 @@ export interface PlanWeek {
 type Row = [w: number, ph: PhaseId, km: number, long: string, quality: string, note: string];
 
 const ROWS: Row[] = [
-  [1, 1, 16, '7', '4–6 Steigerungen', 'Turnier am Wochenende: langer Lauf auf Do'],
-  [2, 1, 19, '8', 'Steigerungen', ''],
-  [3, 1, 22, '9', 'Steigerungen', ''],
-  [4, 1, 16, '7', 'Steigerungen', 'Entlastung'],
-  [5, 1, 22, '10', 'Fahrtspiel 6 × 1 min', '4. Lauf (Mo) kommt dazu'],
+  [1, 1, 13, '6', 'Lockerer Lauf', 'Turnier am Wochenende: langer Lauf auf Do'],
+  [2, 1, 15, '6', 'Lockerer Lauf', ''],
+  [3, 1, 18, '7', '4 Steigerungen', ''],
+  [4, 1, 13, '6', 'Steigerungen', 'Entlastung'],
+  [5, 1, 20, '9', 'Fahrtspiel 6 × 1 min', '4. Lauf (Mo) kommt dazu'],
   [6, 1, 25, '11', 'Bergsprints 8 × 10 s', ''],
   [7, 1, 28, '12', 'Fahrtspiel 8 × 1 min', ''],
   [8, 1, 20, '9', 'Steigerungen', 'Entlastung'],
@@ -94,10 +94,10 @@ export interface Phase {
 }
 
 export const PHASES: Record<PhaseId, Phase> = {
-  1: { name: 'Allgemeine Vorbereitung', time: 'Okt – Dez', run: 'Grundlage, 3–4 Läufe, 16–34 km/Woche, lange Läufe bis 14 km', kraft: 'Grundkraft an Maschinen (A1), schwer, 3× voll', vb: 'Nebensaison, nach Lust' },
-  2: { name: 'Grundlage II', time: 'Jan – März', run: '4 Läufe, bis 50 km/Woche, erste Tempodauerläufe und Intervalle, lange Läufe bis 24 km', kraft: 'Übergang A1 → A2 im Januar, ab Februar komplexe Übungen (A2)', vb: 'Halle, falls möglich' },
-  3: { name: 'Aufbau + Test', time: 'Apr – Mai', run: '4–5 Läufe, Schwelle und Intervalle, Halbmarathon-Test in W32', kraft: 'A2 schwer, weniger Beinvolumen · B und C normal', vb: 'Saisonstart' },
-  4: { name: 'Marathonspezifisch I', time: 'Juni – Juli', run: '5 Läufe, bis 66 km/Woche, lange Läufe bis 32 km mit MT-Abschnitten', kraft: 'Beine auf Erhalt: A kurz und schwer (ca. 45 min) · B und C normal', vb: 'Hauptsaison, Turniere nach Turnierwoche-Regel' },
+  1: { name: 'Allgemeine Vorbereitung', time: 'Okt – Dez', run: 'Grundlage, 3–4 Läufe, 13–34 km/Woche, sanfter Einstieg, lange Läufe bis 14 km', kraft: 'W1–4 Eingewöhnung (2 × 12–15, leicht), ab W5 Hypertrophie (3 × 8–12) an Maschinen (A1) · Fußprogramm im Aufwärmen', vb: 'Nebensaison, nach Lust' },
+  2: { name: 'Grundlage II', time: 'Jan – März', run: '4 Läufe, bis 50 km/Woche, erste Tempodauerläufe und Intervalle, lange Läufe bis 24 km', kraft: 'Maximalkraft (4 × 4–6) · Übergang A1 → A2 im Januar, ab Februar komplexe Übungen (A2)', vb: 'Halle, falls möglich' },
+  3: { name: 'Aufbau + Test', time: 'Apr – Mai', run: '4–5 Läufe, Schwelle und Intervalle, Halbmarathon-Test in W32', kraft: 'A2 schwer (3 × 3–5) plus Sprünge, weniger Beinvolumen', vb: 'Saisonstart' },
+  4: { name: 'Marathonspezifisch I', time: 'Juni – Juli', run: '5 Läufe, bis 66 km/Woche, lange Läufe bis 32 km mit MT-Abschnitten', kraft: 'Erhalt: kurz und schwer (2 × 3–5, ca. 45 min)', vb: 'Hauptsaison, Turniere nach Turnierwoche-Regel' },
   5: { name: 'Marathonspezifisch II', time: 'Aug – Anfang Sept', run: 'Spitzenumfang ~70 km, 2 × 32 km, Generalprobe 20 km MT', kraft: 'Erhalt, wenig Beinvolumen, kein schweres Beintraining 48 h vor langem Lauf', vb: 'reduzieren, keine Turniere' },
   6: { name: 'Taper + Rennen', time: 'Sept', run: 'Umfang auf ca. 75 % / 55 % / 25 %, Intensität kurz halten', kraft: 'nur leicht, letzte 10 Tage keine Beine', vb: 'Pause' },
 };

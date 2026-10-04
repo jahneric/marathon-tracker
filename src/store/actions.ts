@@ -68,10 +68,10 @@ export function toggleSetCheck(k: DateKey, u: Unit, exId: ExerciseId, i: number)
   });
 }
 
-export function addSet(k: DateKey, u: Unit, exId: ExerciseId) {
+export function addSet(k: DateKey, u: Unit, exId: ExerciseId, planned: number = EXERCISES[exId].sets) {
   editLog(k, u, l => {
     const arr = ((l.ex ??= {})[exId] ??= []);
-    const n = Math.max(EXERCISES[exId].sets, arr.length);
+    const n = Math.max(planned, arr.length);
     for (let i = arr.length; i < n; i++) arr[i] = null;
     arr[n] = {};
   });
@@ -145,6 +145,15 @@ export function setWeekWeight(monday: DateKey, kg: string) {
 export function setImportedPlan(plan: ImportedPlan) {
   update(s => {
     s.plan = plan;
+  });
+}
+
+/** In der App erstellten Plan übernehmen – Tempi und Prognose wandern in die Einstellungen */
+export function setGeneratedPlan(plan: ImportedPlan, paces?: Paces, goal?: string) {
+  update(s => {
+    s.plan = plan;
+    if (paces) s.settings.paces = paces;
+    if (goal) s.settings.goal = goal;
   });
 }
 

@@ -20,7 +20,7 @@ export function PlanView({ state, today }: { state: AppState; today: DateKey }) 
         <span><i data-k="done" />erledigt</span>
         <span><i data-k="partial" />teilweise</span>
         <span><i data-k="missed" />verpasst</span>
-        {plan.kind === 'builtin' && <span><i data-k="deload" />Entlastung</span>}
+        {plan.weeks.some(w => w.deload) && <span><i data-k="deload" />Entlastung</span>}
         <span><i data-k="race" />Wettkampf</span>
       </div>
       {plan.weeks.map((week, i) => {

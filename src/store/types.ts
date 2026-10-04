@@ -109,9 +109,19 @@ export interface AppState {
 }
 
 export interface ImportedPlan {
-  source: 'lauftipps' | 'ics';
+  /** generated = in der App aus Kennzahlen erstellt */
+  source: 'lauftipps' | 'ics' | 'generated';
   name: string;
   /** ISO-Zeitstempel */
   importedAt: string;
   events: PlanEvent[];
+  /** Wochenübersicht (nur erstellte Pläne), Index = Woche − 1 */
+  meta?: PlanWeekMeta[];
+}
+
+export interface PlanWeekMeta {
+  headline: string;
+  note: string;
+  deload: boolean;
+  phase: { id: number; name: string; time: string; summary: string };
 }

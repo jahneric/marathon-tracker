@@ -39,18 +39,21 @@ export function eventsToUnits(events: PlanEvent[]): { byDate: Map<DateKey, Unit[
 
   for (const e of events) {
     const list = byDate.get(e.date) ?? [];
-    const type = inferType(e.title, e.description);
-    const target = type === 'run' ? extractKm(e.title, e.description) : undefined;
-    const race = type === 'run' && e.date === last?.date && RACE_RE.test(`${e.title} ${e.description}`);
+    const type = e.type ?? inferType(e.title, e.description);
+    const target = e.type ? e.target : type === 'run' ? extractKm(e.title, e.description) : undefined;
+    const race = e.type ? !!e.race : type === 'run' && e.date === last?.date && RACE_RE.test(`${e.title} ${e.description}`);
     if (race) raceDate = e.date;
     list.push({
-      id: `i${list.length}`,
+      id: e.id ?? `i${list.length}`,
       type,
       title: e.title,
       detail: shortDetail(e.description),
       info: e.description || undefined,
       target,
       race: race || undefined,
+      optional: e.optional,
+      workout: e.workout,
+      time: e.time,
     });
     byDate.set(e.date, list);
   }

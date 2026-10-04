@@ -1,5 +1,5 @@
 import { HALF_MARATHON_WEEK, PHASES, PLAN, PLAN_WEEKS, RACE_WEEK, type Paces, type PlanWeek } from '@/data/plan';
-import type { WorkoutId } from '@/data/exercises';
+import { KRAFT_PHASES, kraftPhase, type WorkoutId } from '@/data/exercises';
 import type { AppState, Unit } from '@/store/types';
 import { addDays, daysBetween, formatDate, weekday, type DateKey } from './dates';
 import { formatKm, roundHalf } from './format';
@@ -57,14 +57,11 @@ export function kmSplit(p: PlanWeek, tournament: boolean): Partial<Record<RunDay
 
 export const kraftVariant = (w: number): WorkoutId => (w <= 13 ? 'A1' : w <= 18 ? 'AT' : 'A2');
 
-const KRAFT_A_DETAIL: Record<number, (w: number) => string> = {
-  1: () => 'schwer, 1–2 Wdh. im Tank',
-  2: w => (w <= 18 ? 'Übergang: Beinpresse + Wadenpresse bleiben, dazu einbeinige Kniebeuge + Hip Airplanes' : 'komplexe, einbeinige Übungen'),
-  3: () => 'A2 schwer, weniger Beinvolumen',
-  4: () => 'Erhalt: kurz und schwer (ca. 45 min)',
-  5: () => 'Erhalt, wenig Beinvolumen',
-  6: () => 'nur leicht',
-};
+/** Kraftphase der Woche als Kurztext, z. B. „Hypertrophie: mittel, 2–3 Wdh. im Tank …“ */
+export function kraftDetail(w: number): string {
+  const p = KRAFT_PHASES[kraftPhase(w)];
+  return `${p.name}: ${p.effort}`;
+}
 
 /** Die geplanten Einheiten eines Tages */
 export function plannedUnits(ctx: PlanContext, k: DateKey): Unit[] {
@@ -96,7 +93,7 @@ export function plannedUnits(ctx: PlanContext, k: DateKey): Unit[] {
       if (w === RACE_WEEK) {
         add('mob', 'mob', 'Mobility statt Kraft A', 'Letzte 10 Tage vor dem Rennen: keine Beine');
       } else {
-        const detail = prevTour ? 'Nach dem Turnier: ca. 70 % Gewicht oder nur Mobility' : (KRAFT_A_DETAIL[ph]?.(w) ?? '');
+        const detail = prevTour ? 'Nach dem Turnier: ca. 70 % Gewicht oder nur Mobility' : kraftDetail(w) + (w >= 14 && w <= 18 ? ' · Übergang: einbeinige Kniebeuge + Hip Airplanes kommen dazu' : '');
         add('kraftA', 'kraft', 'Kraft A – Unterkörper', detail, { workout: kraftVariant(w), time: 'morgens' });
       }
       if (w >= 5) add('run', 'run', 'Kurzer, sehr lockerer Lauf', `ca. ${kmTxt(km.mo)} km · ${easy}`, { target: km.mo, time: 'abends' });
@@ -112,7 +109,7 @@ export function plannedUnits(ctx: PlanContext, k: DateKey): Unit[] {
       break;
     }
     case 2: { // Mittwoch
-      add('kraftB', 'kraft', 'Kraft B – Oberkörper Pull', 'vor dem Volleyball · Pull statt Push schont die Schulter', { workout: 'B', time: 'morgens' });
+      add('kraftB', 'kraft', 'Kraft B – Oberkörper Pull', `${kraftDetail(w)} · vor dem Volleyball, Pull statt Push schont die Schulter`, { workout: 'B', time: 'morgens' });
       if (ph < 6) add('vb', 'vb', 'Beachvolleyball-Training', PHASES[ph].vb, { time: 'nachmittags' });
       break;
     }
@@ -124,7 +121,7 @@ export function plannedUnits(ctx: PlanContext, k: DateKey): Unit[] {
     }
     case 4: { // Freitag
       add('kraftC', 'kraft', 'Kraft C – Oberkörper Push',
-        tour ? 'Turnierwoche: normal, aber kein Satz nah ans Limit – Schultern schonen' : 'Hauptübung Bankdrücken progressiv steigern',
+        tour ? 'Turnierwoche: normal, aber kein Satz nah ans Limit – Schultern schonen' : kraftDetail(w),
         { workout: 'C', time: 'morgens' });
       break;
     }

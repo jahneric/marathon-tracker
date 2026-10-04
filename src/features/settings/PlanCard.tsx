@@ -9,6 +9,7 @@ import { Button } from '@/ui/Button';
 import { Card } from '@/ui/Card';
 import { confirmDialog, toast } from '@/ui/feedback';
 import { Field } from '@/ui/Field';
+import { PlanGenerator } from './PlanGenerator';
 import styles from './settings.module.css';
 
 const LAUFTIPPS_PLANS = 'https://lauftipps.ch/kostenlose-trainingsplaene/';
@@ -47,7 +48,7 @@ export function PlanCard({ state }: { state: AppState }) {
           <div className="tiny muted">
             {plan.kind === 'builtin'
               ? 'Standardplan · 52 Wochen · Laufen, Kraft, Beachvolleyball'
-              : `${state.plan?.source === 'lauftipps' ? 'von lauftipps.ch · ' : 'importiert · '}${plan.weeks.length} Wochen · ${fmt(plan.start)} – ${fmt(plan.end)}`}
+              : `${state.plan?.source === 'lauftipps' ? 'von lauftipps.ch · ' : state.plan?.source === 'generated' ? 'automatisch erstellt · ' : 'importiert · '}${plan.weeks.length} Wochen · ${fmt(plan.start)} – ${fmt(plan.end)}`}
           </div>
         </div>
         {plan.kind === 'imported' && (
@@ -56,7 +57,7 @@ export function PlanCard({ state }: { state: AppState }) {
             variant="ghost"
             icon={<RotateCcw />}
             onClick={async () => {
-              if (await confirmDialog({ title: 'Zurück zum Standardplan?', message: 'Der importierte Plan wird entfernt. Deine Einträge bleiben gespeichert.', confirmLabel: 'Zurück wechseln' })) {
+              if (await confirmDialog({ title: 'Zurück zum Standardplan?', message: 'Der aktuelle Plan wird entfernt. Deine Einträge bleiben gespeichert.', confirmLabel: 'Zurück wechseln' })) {
                 resetToStandardPlan();
               }
             }}
@@ -92,9 +93,11 @@ export function PlanCard({ state }: { state: AppState }) {
         </p>
       )}
 
+      <PlanGenerator state={state} />
+
       <div className={styles.importBox}>
         <p className="small">
-          <b>Eigenen Plan verwenden:</b> Plan auf lauftipps.ch erstellen, dort „Terminkalender-Export“ wählen und die heruntergeladene <code>.ics</code>-Datei hier importieren. Andere Kalenderdateien mit Trainings funktionieren auch.
+          <b>Fertigen Plan importieren:</b> Plan auf lauftipps.ch erstellen, dort „Terminkalender-Export“ wählen und die heruntergeladene <code>.ics</code>-Datei hier importieren. Andere Kalenderdateien mit Trainings funktionieren auch.
         </p>
         <div className="row wrap">
           <label className={styles.fileBtn}>

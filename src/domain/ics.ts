@@ -1,9 +1,19 @@
+import type { WorkoutId } from '@/data/exercises';
+import type { UnitType } from '@/store/types';
 import { toKey, type DateKey } from './dates';
 
 export interface PlanEvent {
   date: DateKey;
   title: string;
   description: string;
+  // Nur bei in der App erstellten Plänen: feste Angaben statt Erkennung aus dem Text
+  id?: string;
+  type?: UnitType;
+  target?: number;
+  race?: boolean;
+  optional?: boolean;
+  workout?: WorkoutId;
+  time?: string;
 }
 
 /** Zeilen entfalten (RFC 5545: Folgezeilen beginnen mit Leerzeichen oder Tab) */

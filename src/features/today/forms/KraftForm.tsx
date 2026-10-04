@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
-import { EXERCISES, isWorkoutId, WORKOUTS, type ExerciseId, type WorkoutId } from '@/data/exercises';
+import { EXERCISES, isWorkoutId, KRAFT_PHASES, prescription, workoutExercises, WORKOUTS, type ExerciseId, type KraftPhaseId, type WorkoutId } from '@/data/exercises';
+import { activePlan, kraftPhaseAt } from '@/domain/activePlan';
 import { formatDate, type DateKey } from '@/domain/dates';
 import { formatSets, lastSets } from '@/domain/logs';
 import { addSet, setSet, toggleField, toggleSetCheck } from '@/store/actions';
@@ -17,6 +18,7 @@ export function KraftForm({ state, date, unit: u, log: l }: Props) {
   const variant: WorkoutId = isWorkoutId(l.variant) ? l.variant : u.workout ?? 'B';
   const isA = variant.startsWith('A');
   const showChooser = isA || u.extra;
+  const phase = kraftPhaseAt(activePlan(state), date);
 
   return (
     <>
@@ -34,27 +36,30 @@ export function KraftForm({ state, date, unit: u, log: l }: Props) {
           )}
         </Field>
       )}
-      <p className="tiny muted">1–2 Wiederholungen im Tank lassen, nie bis zum Muskelversagen.</p>
+      <p className="tiny muted">
+        <b className="text-2">{KRAFT_PHASES[phase].name} ({KRAFT_PHASES[phase].weeks}):</b> {KRAFT_PHASES[phase].effort}.
+      </p>
       <div className={styles.exList}>
-        {WORKOUTS[variant].ex.map(exId => (
-          <ExerciseBlock key={exId} state={state} date={date} unit={u} log={l} exId={exId} />
+        {workoutExercises(variant, phase).map(exId => (
+          <ExerciseBlock key={exId} state={state} date={date} unit={u} log={l} exId={exId} phase={phase} />
         ))}
       </div>
     </>
   );
 }
 
-function ExerciseBlock({ state, date, unit: u, log: l, exId }: Props & { exId: ExerciseId }) {
+function ExerciseBlock({ state, date, unit: u, log: l, exId, phase }: Props & { exId: ExerciseId; phase: KraftPhaseId }) {
   const e = EXERCISES[exId];
   const sets = l.ex?.[exId] ?? [];
-  const n = Math.max(e.sets, sets.length);
+  const rx = prescription(exId, phase);
+  const n = Math.max(rx.sets, sets.length);
   const last = lastSets(state, date, exId);
 
   return (
     <div className={styles.ex}>
       <div className={styles.exHead}>
         <span className={styles.exName}>{e.name}</span>
-        <span className="tiny muted num">{e.sets} × {e.reps}</span>
+        <span className="tiny muted num">{rx.sets} × {rx.reps}</span>
       </div>
       <p className="tiny muted">
         {e.hint}
@@ -93,7 +98,7 @@ function ExerciseBlock({ state, date, unit: u, log: l, exId }: Props & { exId: E
           );
         })}
         {e.kind !== 'c' && (
-          <Button size="sm" variant="ghost" icon={<Plus />} onClick={() => addSet(date, u, exId)}>
+          <Button size="sm" variant="ghost" icon={<Plus />} onClick={() => addSet(date, u, exId, rx.sets)}>
             Satz
           </Button>
         )}

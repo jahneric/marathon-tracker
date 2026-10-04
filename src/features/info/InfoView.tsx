@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { EXERCISES, MOBILITY, WORKOUTS, type WorkoutId } from '@/data/exercises';
+import { EXERCISES, KRAFT_PHASES, MOBILITY, prescription, workoutExercises, type KraftPhaseId, type WorkoutId } from '@/data/exercises';
 import { PHASES, RULES, type PhaseId } from '@/data/plan';
-import { formatDate } from '@/domain/dates';
-import { activePlan } from '@/domain/activePlan';
+import { formatDate, todayKey } from '@/domain/dates';
+import { activePlan, kraftPhaseAt } from '@/domain/activePlan';
 import type { AppState } from '@/store/types';
 import { Card } from '@/ui/Card';
 import styles from './info.module.css';
@@ -16,17 +16,20 @@ function Section({ title, open, children }: { title: string; open?: boolean; chi
   );
 }
 
-function WorkoutTable({ id }: { id: WorkoutId }) {
+function WorkoutTable({ id, phase }: { id: WorkoutId; phase: KraftPhaseId }) {
   return (
     <table className={styles.table}>
-      <thead><tr><th>Übung</th><th>Sätze × Wdh.</th></tr></thead>
+      <thead><tr><th>Übung</th><th>Sätze × Wdh. ({KRAFT_PHASES[phase].name})</th></tr></thead>
       <tbody>
-        {WORKOUTS[id].ex.map(e => (
-          <tr key={e}>
-            <td>{EXERCISES[e].name}<div className="tiny muted">{EXERCISES[e].hint}</div></td>
-            <td className="num">{EXERCISES[e].sets} × {EXERCISES[e].reps}</td>
-          </tr>
-        ))}
+        {workoutExercises(id, phase).map(e => {
+          const rx = prescription(e, phase);
+          return (
+            <tr key={e}>
+              <td>{EXERCISES[e].name}<div className="tiny muted">{EXERCISES[e].hint}</div></td>
+              <td className="num">{rx.sets} × {rx.reps}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -35,11 +38,12 @@ function WorkoutTable({ id }: { id: WorkoutId }) {
 export function InfoView({ state }: { state: AppState }) {
   const { paces: P, goal } = state.settings;
   const plan = activePlan(state);
+  const phase = kraftPhaseAt(plan, todayKey());
   return (
     <>
       {plan.kind === 'imported' && (
         <p className={styles.notice}>
-          Du nutzt den importierten Plan „{plan.name}“. Die Infos unten gehören zum Standardplan Marathon 2027 – die Regeln und Tempobereiche gelten aber allgemein.
+          Du nutzt den {state.plan?.source === 'generated' ? 'selbst erstellten' : 'importierten'} Plan „{plan.name}“. Wochenstruktur und Periodisierung unten gehören zum Standardplan Marathon 2027 – Regeln, Tempobereiche und Übungen gelten aber allgemein.
         </p>
       )}
       <Card>
@@ -106,17 +110,48 @@ export function InfoView({ state }: { state: AppState }) {
         </p>
       </Section>
 
-      <Section title="Kraft A1 – Maschinen (Okt – Dez)"><WorkoutTable id="A1" /></Section>
+      <Section title="Kraft-Periodisierung">
+        <table className={styles.table}>
+          <thead><tr><th>Phase</th><th>Hauptübungen</th><th>Zusatzübungen</th></tr></thead>
+          <tbody>
+            {(Object.entries(KRAFT_PHASES) as [KraftPhaseId, (typeof KRAFT_PHASES)[KraftPhaseId]][]).map(([id, p]) => (
+              <tr key={id}>
+                <td>{id === phase ? <b>{p.name}</b> : p.name}<div className="tiny muted">{p.weeks} · {p.effort}</div></td>
+                <td className="num">{p.main[0]} × {p.main[1]}</td>
+                <td className="num">{p.acc[0]} × {p.acc[1]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="tiny muted">
+          Erst leicht und mit vielen Wiederholungen Muskeln und Sehnen aufbauen, dann schwer werden: Muskelaufbau klappt mit leichten Lasten genauso gut,
+          für die Laufökonomie zählen später schwere Lasten und Sprünge. Die Tabellen unten zeigen die Vorgaben der aktuellen Phase.
+        </p>
+      </Section>
+      <Section title="Fuß & Sprunggelenk (im Aufwärmen jeder Krafteinheit)">
+        <table className={styles.table}>
+          <tbody>
+            {(['shortfoot', 'heelball', 'footadd', 'balance'] as const).map(e => (
+              <tr key={e}>
+                <td>{EXERCISES[e].name}<div className="tiny muted">{EXERCISES[e].hint}</div></td>
+                <td className="num">{EXERCISES[e].sets} × {EXERCISES[e].reps}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="tiny muted">Barfuß, ca. 5 min. Kräftigt die Fußinnenseite und das Gewölbe, damit das Sprunggelenk nicht nach innen kippt – Wirkung zeigt sich nach einigen Wochen bis Monaten.</p>
+      </Section>
+      <Section title="Kraft A1 – Maschinen (Okt – Dez)"><WorkoutTable id="A1" phase={phase} /></Section>
       <Section title="Kraft A – Übergang (W14 – 18)">
-        <WorkoutTable id="AT" />
+        <WorkoutTable id="AT" phase={phase} />
         <p className="tiny muted">Erst wechseln, wenn die einbeinige Kniebeuge auf der Box sauber und ohne einknickendes Knie klappt.</p>
       </Section>
-      <Section title="Kraft A2 – Komplex (ab Februar)"><WorkoutTable id="A2" /></Section>
+      <Section title="Kraft A2 – Komplex (ab Februar)"><WorkoutTable id="A2" phase={phase} /></Section>
       <Section title="Kraft B – Oberkörper Pull (Mi)">
-        <WorkoutTable id="B" />
+        <WorkoutTable id="B" phase={phase} />
         <p className="tiny muted">Klimmzug-Griff wöchentlich zwischen breit und schulterbreit/Untergriff wechseln.</p>
       </Section>
-      <Section title="Kraft C – Oberkörper Push (Fr)"><WorkoutTable id="C" /></Section>
+      <Section title="Kraft C – Oberkörper Push (Fr)"><WorkoutTable id="C" phase={phase} /></Section>
 
       <Section title="Hüft-Mobility (3–4× pro Woche)">
         <table className={styles.table}>
@@ -126,7 +161,7 @@ export function InfoView({ state }: { state: AppState }) {
             ))}
           </tbody>
         </table>
-        <p className="tiny muted">Am besten Di und Sa nach dem Lauf sowie So. Wenn nur zwei Übungen gehen: Couch Stretch und 90/90 nach dem langen Lauf.</p>
+        <p className="tiny muted">Am besten Di und Sa nach dem Lauf sowie So. Wenn nur zwei Übungen gehen: Couch Stretch und 90/90 nach dem langen Lauf. Die beiden Innenrotations-Übungen sind aktiv – langsam und ohne Kneifen in der Leiste.</p>
       </Section>
 
       <Section title="Periodisierung">

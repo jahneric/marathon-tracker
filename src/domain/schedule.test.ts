@@ -6,6 +6,7 @@ import { activePlan } from './activePlan';
 import { addDays } from './dates';
 import { formatPace, parseDuration } from './format';
 import { parseIcs } from './ics';
+import { generatePlan } from './generator';
 import { eventsToUnits, extractKm } from './importedPlan';
 import { dayStatus, dayUnits, weightSeries } from './logs';
 import { kmSplit, plannedUnits, raceDate, weekInfo } from './schedule';
@@ -146,6 +147,48 @@ describe('Plan-Import (.ics)', () => {
     expect(plan.weeks[1]).toMatchObject({ w: 2, km: 12 });
     expect(dayUnits(s, '2026-10-06')[0]!.title).toBe('Longjog 12 km');
     expect(plan.supportsTournaments).toBe(false);
+  });
+});
+
+describe('Plan-Generator', () => {
+  const cfg = { race: 'hm', raceDate: '2027-03-14', start: '2026-10-05', weeklyKm: 12, longRun: 6, runDays: 3, strength: 0, mobility: false, refKm: 10, refSec: 3000 } as const;
+
+  it('baut einen Halbmarathon-Plan bis zum Renntag', () => {
+    const r = generatePlan(cfg);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.weeks).toHaveLength(23);
+    expect(r.weeks[0]).toMatchObject({ long: 6, quality: 'Lockerer Lauf' });
+    expect(Math.abs(r.weeks[0]!.km - 12)).toBeLessThanOrEqual(1);
+    expect(r.longest).toBeGreaterThanOrEqual(16);
+    expect(r.plan.events.at(-1)).toMatchObject({ date: '2027-03-14', race: true, target: 21.1 });
+    expect(r.plan.events.every(e => e.type === 'run')).toBe(true);
+    expect(r.paces?.thr).toBe('5:07');
+
+    const plan = activePlan(state({ plan: r.plan }));
+    expect(plan.raceDate).toBe('2027-03-14');
+    expect(plan.weeks).toHaveLength(23);
+    expect(plan.weeks[3]).toMatchObject({ deload: true, note: 'Entlastung' });
+    expect(plan.weeks[0]!.phase?.name).toBe('Grundlage');
+  });
+
+  it('steigert den Umfang nie um mehr als ca. 10 % gegenüber der letzten Belastungswoche', () => {
+    const r = generatePlan({ ...cfg, race: 'm', raceDate: '2027-09-26', runDays: 5 });
+    if (!r.ok) throw new Error(r.error);
+    const load = r.weeks.filter(w => !w.deload && w.phase < 4);
+    for (let i = 1; i < load.length; i++) expect(load[i]!.km / load[i - 1]!.km).toBeLessThanOrEqual(1.12);
+  });
+
+  it('plant Kraft und Mobility nur auf Wunsch und keine Beine kurz vor dem Rennen', () => {
+    const r = generatePlan({ ...cfg, strength: 3, mobility: true });
+    if (!r.ok) throw new Error(r.error);
+    const kraft = r.plan.events.filter(e => e.type === 'kraft');
+    expect(kraft[0]).toMatchObject({ workout: 'B', date: '2026-10-05' });
+    expect(kraft.filter(e => e.workout?.startsWith('A')).at(-1)!.date < '2027-03-04').toBe(true);
+    expect(r.plan.events.some(e => e.type === 'mob')).toBe(true);
+  });
+
+  it('lehnt zu kurze Vorbereitungen ab', () => {
+    expect(generatePlan({ ...cfg, raceDate: '2026-10-25' }).ok).toBe(false);
   });
 });
 

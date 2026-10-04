@@ -1,3 +1,4 @@
+import { kraftPhase, scaledKraftPhase, type KraftPhaseId } from '@/data/exercises';
 import { PHASES, PLAN, type PlanWeek } from '@/data/plan';
 import type { AppState, ImportedPlan, Unit } from '@/store/types';
 import { addDays, daysBetween, todayKey, weekday, type DateKey } from './dates';
@@ -46,6 +47,12 @@ export const mondayOf = (k: DateKey): DateKey => addDays(k, -weekday(k));
 /** Wochennummer im Plan (kann < 1 oder > Anzahl Wochen sein) */
 export const weekNumber = (plan: ActivePlan, k: DateKey): number => Math.floor(daysBetween(k, plan.start) / 7) + 1;
 
+/** Kraftphase am Tag k – beim Standardplan nach Wochennummer, sonst auf die Planlänge verteilt */
+export const kraftPhaseAt = (plan: ActivePlan, k: DateKey): KraftPhaseId => {
+  const w = weekNumber(plan, k);
+  return plan.kind === 'builtin' ? kraftPhase(w) : scaledKraftPhase(w, plan.weeks.length);
+};
+
 export const planWeek = (plan: ActivePlan, w: number): PlanWeekView | null => plan.weeks[w - 1] ?? null;
 
 export const weekStartOf = (plan: ActivePlan, w: number): DateKey => addDays(plan.start, (w - 1) * 7);
@@ -92,15 +99,16 @@ function importedPlan(plan: ImportedPlan): ActivePlan {
     const n = units.filter(u => u.type !== 'rest').length;
     const parts = [n === 1 ? '1 Einheit' : `${n} Einheiten`];
     if (longest) parts.push(`längster Lauf ${longest.toLocaleString('de-DE')} km`);
+    const meta = plan.meta?.[i];
     return {
       w: i + 1,
       start: ws,
       km,
-      headline: parts.join(' · '),
-      note: '',
-      deload: false,
+      headline: meta?.headline ?? parts.join(' · '),
+      note: meta?.note ?? '',
+      deload: meta?.deload ?? false,
       race: units.some(u => u.race),
-      phase: null,
+      phase: meta?.phase ?? null,
     };
   });
 
