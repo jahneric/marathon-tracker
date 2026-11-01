@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { mondayOf } from '@/domain/activePlan';
 import { addDays, formatDate, todayKey, weekday } from '@/domain/dates';
 import { parseDuration, parseNum } from '@/domain/format';
-import { generatePlan, RACES, type GenOutcome, type RaceKind } from '@/domain/generator';
+import { generatePlan, RACES, type GenOutcome, type RaceKind, type RunDays } from '@/domain/generator';
 import { setGeneratedPlan } from '@/store/actions';
 import type { AppState } from '@/store/types';
 import { Button } from '@/ui/Button';
@@ -13,7 +13,8 @@ import { Segmented } from '@/ui/Segmented';
 import styles from './settings.module.css';
 
 const RACE_OPTIONS = (Object.keys(RACES) as RaceKind[]).map(value => ({ value, label: RACES[value].name }));
-const DAY_OPTIONS = [{ value: '3', label: '3' }, { value: '4', label: '4' }, { value: '5', label: '5' }] as const;
+type DayValue = '2' | '3' | '4' | '5';
+const DAY_OPTIONS = [{ value: '2', label: '2' }, { value: '3', label: '3' }, { value: '4', label: '4' }, { value: '5', label: '5' }] as const;
 const STRENGTH_OPTIONS = [{ value: '0', label: 'keine' }, { value: '2', label: '2× pro Woche' }, { value: '3', label: '3× pro Woche' }] as const;
 const MOB_OPTIONS = [{ value: '1', label: 'ja' }, { value: '0', label: 'nein' }] as const;
 
@@ -29,7 +30,9 @@ export function PlanGenerator({ state }: { state: AppState }) {
   const [start, setStart] = useState(nextMonday);
   const [weeklyKm, setWeeklyKm] = useState('');
   const [longRun, setLongRun] = useState('');
-  const [runDays, setRunDays] = useState<'3' | '4' | '5'>('3');
+  const [runDays, setRunDays] = useState<DayValue>('3');
+  /** '0' = gleich bleiben */
+  const [runDaysLater, setRunDaysLater] = useState<'0' | DayValue>('0');
   const [refKm, setRefKm] = useState('10');
   const [refTime, setRefTime] = useState('');
   const [strength, setStrength] = useState<'0' | '2' | '3'>('0');
@@ -41,12 +44,13 @@ export function PlanGenerator({ state }: { state: AppState }) {
     const refSec = parseDuration(refTime);
     return generatePlan({
       race, raceDate, start, weeklyKm: km, longRun: long,
-      runDays: Number(runDays) as 3 | 4 | 5,
+      runDays: Number(runDays) as RunDays,
+      ...(Number(runDaysLater) > Number(runDays) ? { runDaysLater: Number(runDaysLater) as RunDays } : {}),
       strength: Number(strength) as 0 | 2 | 3,
       mobility: mobility === '1',
       ...(refSec ? { refKm: Number(refKm), refSec } : {}),
     });
-  }, [race, raceDate, start, weeklyKm, longRun, runDays, refKm, refTime, strength, mobility]);
+  }, [race, raceDate, start, weeklyKm, longRun, runDays, runDaysLater, refKm, refTime, strength, mobility]);
 
   const apply = async () => {
     if (!outcome?.ok) return;
@@ -87,6 +91,20 @@ export function PlanGenerator({ state }: { state: AppState }) {
         <Field label="Läufe pro Woche" asLabel={false}>
           <Segmented options={DAY_OPTIONS} value={runDays} onChange={setRunDays} label="Läufe pro Woche" size="sm" />
         </Field>
+        {runDays !== '5' && (
+          <Field label="Später steigern auf" hint="ein Schritt pro Phase, erst nach der Grundlage" asLabel={false}>
+            <Segmented
+              options={[{ value: '0', label: 'nein' }, ...DAY_OPTIONS.filter(o => o.value > runDays)]}
+              value={Number(runDaysLater) > Number(runDays) ? runDaysLater : '0'}
+              onChange={setRunDaysLater}
+              label="Später steigern auf"
+              size="sm"
+            />
+          </Field>
+        )}
+        {runDays === '2' && (
+          <p className="small muted">Bei 2 Läufen: unter der Woche eine Tempoeinheit (in der Grundlage Fahrtspiel oder Steigerungen), am Wochenende der lange Lauf. Klappt in einer Woche nur ein Lauf, mach den langen Lauf.</p>
+        )}
         <div className="grid2">
           <Field label="Aktuelle Bestzeit über">
             <select value={refKm} onChange={e => setRefKm(e.target.value)}>
@@ -97,7 +115,7 @@ export function PlanGenerator({ state }: { state: AppState }) {
             </select>
           </Field>
           <Field label="Zeit (optional)" hint="für Tempi und Prognose">
-            <input type="text" inputMode="numeric" value={refTime} placeholder="z. B. 52:30" onChange={e => setRefTime(e.target.value)} />
+            <input type="text" inputMode="decimal" value={refTime} placeholder="z. B. 52:30" onChange={e => setRefTime(e.target.value)} />
           </Field>
         </div>
         <Field label="Krafttraining" asLabel={false}>
@@ -127,7 +145,7 @@ export function PlanGenerator({ state }: { state: AppState }) {
             {outcome.warnings.map(w => <p key={w} className={styles.genWarn}>{w}</p>)}
             <div className={styles.genScroll}>
               <table className={styles.genTable}>
-                <thead><tr><th>W</th><th>ab</th><th>km</th><th>lang</th><th>Tempoeinheit</th></tr></thead>
+                <thead><tr><th>W</th><th>ab</th><th>km</th><th>lang</th><th>Läufe</th><th>Tempoeinheit</th></tr></thead>
                 <tbody>
                   {outcome.weeks.map(w => (
                     <tr key={w.w} data-deload={w.deload || undefined}>
@@ -135,6 +153,7 @@ export function PlanGenerator({ state }: { state: AppState }) {
                       <td className="num">{formatDate(w.start)}</td>
                       <td className="num">{Math.round(w.km)}</td>
                       <td className="num">{w.long}</td>
+                      <td className="num">{w.days}×</td>
                       <td>{w.race ? `${RACES[race].name} · davor ${w.quality}` : w.deload ? `Entlastung · ${w.quality}` : w.quality}</td>
                     </tr>
                   ))}

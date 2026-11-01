@@ -1,5 +1,5 @@
 import type { DateKey } from '@/domain/dates';
-import { formatKm, formatPace, parseDuration, parseNum } from '@/domain/format';
+import { formatDuration, formatKm, formatPace, parseDuration, parseNum } from '@/domain/format';
 import { FEEL } from '@/domain/logs';
 import { setLogField, toggleField } from '@/store/actions';
 import type { AppState, Unit, UnitLog } from '@/store/types';
@@ -22,7 +22,9 @@ export function RunForm({ state, date, unit: u, log: l }: Props) {
           <input type="text" inputMode="decimal" value={l.km ?? ''} placeholder={u.target ? formatKm(u.target) : 'km'} onChange={e => setLogField(date, u, 'km', e.target.value)} />
         </Field>
         <Field label="Zeit (mm:ss / h:mm:ss)">
-          <input type="text" inputMode="numeric" value={l.dur ?? ''} placeholder="z. B. 52:30" onChange={e => setLogField(date, u, 'dur', e.target.value)} />
+          <input type="text" inputMode="decimal" value={l.dur ?? ''} placeholder="z. B. 52,30" onChange={e => setLogField(date, u, 'dur', e.target.value)}
+            // iOS hat keinen Ziffernblock mit Doppelpunkt: „42,50“ eingeben, beim Verlassen wird „42:50“ daraus
+            onBlur={() => { if (sec != null && formatDuration(sec) !== l.dur) setLogField(date, u, 'dur', formatDuration(sec)); }} />
         </Field>
       </div>
 

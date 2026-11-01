@@ -6,6 +6,7 @@ import { formatDuration, formatKm, formatPace, roundHalf } from './format';
 import type { PlanEvent } from './ics';
 
 export type RaceKind = '10k' | 'hm' | 'm';
+export type RunDays = 2 | 3 | 4 | 5;
 
 export interface GenConfig {
   race: RaceKind;
@@ -16,7 +17,9 @@ export interface GenConfig {
   weeklyKm: number;
   /** längster Lauf der letzten vier Wochen */
   longRun: number;
-  runDays: 3 | 4 | 5;
+  runDays: RunDays;
+  /** optional: Läufe pro Woche schrittweise bis hierhin steigern (je Phase ein Schritt) */
+  runDaysLater?: RunDays;
   /** Krafteinheiten pro Woche */
   strength: 0 | 2 | 3;
   mobility: boolean;
@@ -44,8 +47,8 @@ export const RACES: Record<RaceKind, RaceDef> = {
   m: { name: 'Marathon', km: 42.2, peak: 65, longCap: 32, longStep: 2, taper: [0.75, 0.55], longOk: 28 },
 };
 
-const DAYS_FACTOR = { 3: 0.8, 4: 1, 5: 1.15 } as const;
-const LONG_SHARE = { 3: 0.5, 4: 0.45, 5: 0.4 } as const;
+const DAYS_FACTOR = { 2: 0.6, 3: 0.8, 4: 1, 5: 1.15 } as const;
+const LONG_SHARE = { 2: 0.55, 3: 0.5, 4: 0.45, 5: 0.4 } as const;
 
 const BASE = ['Lockerer Lauf', 'Lockerer Lauf + 4 Steigerungen', 'Fahrtspiel 6 × 1 min', 'Lockerer Lauf + 6 Steigerungen', 'Fahrtspiel 8 × 1 min', 'Hügelläufe 6 × 30 s'];
 const BUILD: Record<RaceKind, string[]> = {
@@ -73,6 +76,8 @@ export interface GenWeek {
   km: number;
   long: number;
   quality: string;
+  /** Läufe in dieser Woche */
+  days: RunDays;
   deload: boolean;
   race: boolean;
 }
@@ -163,9 +168,17 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
   const p = cfg.refKm && cfg.refSec ? paceSet(cfg.refKm, cfg.refSec) : null;
   const easy = p ? `locker ${formatPace(p.easyLo)}–${formatPace(p.easyHi)} /km` : 'locker – so, dass du in ganzen Sätzen reden kannst';
 
+  // Läufe pro Woche: Start in der Grundlage, Ziel ab der wettkampfspezifischen Phase, Aufbau dazwischen
+  const target = Math.max(cfg.runDays, cfg.runDaysLater ?? cfg.runDays) as RunDays;
+  const daysInPhase = (phase: number): RunDays =>
+    phase <= 1 ? cfg.runDays : phase === 2 ? (cfg.runDays + Math.ceil((target - cfg.runDays) / 2)) as RunDays : target;
+
   // 1. Wochenumfänge: 3 Wochen steigern (max. ca. 8 %), jede 4. Woche entlasten
-  const peak = Math.max(race.peak * DAYS_FACTOR[cfg.runDays], cfg.weeklyKm);
-  const share = cfg.race === 'm' ? 0.5 : LONG_SHARE[cfg.runDays];
+  const peak = Math.max(race.peak * DAYS_FACTOR[target], cfg.weeklyKm);
+  // mit weniger Läufen ist auch der erreichbare Umfang kleiner
+  const cap = (d: RunDays) => Math.max(race.peak * DAYS_FACTOR[d], cfg.weeklyKm);
+  const share = (d: RunDays) => (cfg.race === 'm' ? Math.max(0.5, LONG_SHARE[d]) : LONG_SHARE[d]);
+  let days = cfg.runDays;
   let level = clamp(cfg.weeklyKm, 8, peak);
   let longLevel = clamp(cfg.longRun, 4, race.longCap);
   const counters = [0, 0, 0, 0];
@@ -173,22 +186,24 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
 
   for (let i = 0; i < build; i++) {
     const deload = (i + 1) % 4 === 0 && i < build - 1;
-    if (i > 0 && !deload) {
-      level = Math.min(peak, Math.max(level * 1.08, level + 1));
-      longLevel = Math.min(race.longCap, longLevel + race.longStep);
-    }
     const f = i / build;
     const phase = f < 0.35 ? 1 : f < 0.7 ? 2 : 3;
+    // neue Läufe erst nach einer Entlastungswoche bzw. nie in einer Entlastungswoche einführen
+    if (!deload) days = daysInPhase(phase);
+    if (i > 0 && !deload) {
+      level = Math.min(peak, cap(days), Math.max(level * 1.08, level + 1));
+      longLevel = Math.min(race.longCap, longLevel + race.longStep);
+    }
     const km = Math.round(level * (deload ? 0.75 : 1));
     // Anteil am Wochenumfang begrenzen, aber nie unter den Lauf, den du ohnehin schon schaffst
     const cut = deload ? 0.75 : 1;
-    const long = Math.round(Math.min(longLevel * cut, Math.max(km * share, Math.min(cfg.longRun, longLevel) * cut)));
+    const long = Math.round(Math.min(longLevel * cut, Math.max(km * share(days), Math.min(cfg.longRun, longLevel) * cut)));
     let quality = 'Lockerer Lauf + Steigerungen';
     if (!deload) {
       const c = counters[phase]!++;
       quality = phase === 1 ? (BASE[c] ?? BASE[2 + ((c - 2) % 4)]!) : phase === 2 ? BUILD[cfg.race][c % 6]! : SPECIFIC[cfg.race][c % 4]!;
     }
-    weeks.push({ w: i + 1, start: addDays(cfg.start, i * 7), phase, km, long, quality, deload, race: false });
+    weeks.push({ w: i + 1, start: addDays(cfg.start, i * 7), phase, km, long, quality, days, deload, race: false });
   }
 
   const longest = Math.max(...weeks.map(w => w.long));
@@ -199,10 +214,10 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
       w: i + 1, start: addDays(cfg.start, i * 7), phase: 4,
       km: Math.round(lastLoad.km * f), long: Math.round(lastLoad.long * f),
       quality: cfg.race === 'm' ? '3 × 3 km im Marathontempo' : cfg.race === 'hm' ? '3 × 2 km im HM-Tempo' : '4 × 1 km im 10-km-Tempo',
-      deload: false, race: false,
+      days: lastLoad.days, deload: false, race: false,
     });
   });
-  weeks.push({ w: n, start: addDays(cfg.start, (n - 1) * 7), phase: 4, km: 0, long: race.km, quality: '3 × 1 km im Wettkampftempo', deload: false, race: true });
+  weeks.push({ w: n, start: addDays(cfg.start, (n - 1) * 7), phase: 4, km: 0, long: race.km, quality: '3 × 1 km im Wettkampftempo', days: lastLoad.days, deload: false, race: true });
 
   // 2. Einheiten: Tage relativ zum Wochentag des Wettkampfs (langer Lauf am selben Wochentag)
   const events: PlanEvent[] = [];
@@ -235,15 +250,17 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
 
     if (wk.race) {
       const short = roundHalf(clamp(lastLoad.km * 0.12, 4, 8));
-      run(-5, 'Lockerer Lauf', short, easy);
+      if (wk.days > 2) run(-5, 'Lockerer Lauf', short, easy);
       run(-3, 'Lockerer Lauf mit 3 × 1 km im Wettkampftempo', short + 1, 'Renntempo anlaufen, Rest locker');
-      if (cfg.runDays > 3) run(-1, 'Optional 15–20 min ganz locker', undefined, 'mit 2–3 Steigerungen, Beine wach halten', { optional: true });
+      if (wk.days > 3) run(-1, 'Optional 15–20 min ganz locker', undefined, 'mit 2–3 Steigerungen, Beine wach halten', { optional: true });
       run(0, race.name, race.km, `${formatKm(race.km)} km · ${prediction ? `Prognose ${prediction} h` : 'gleichmäßig starten, die zweite Hälfte entscheidet'}`, { race: true });
-      wk.km = short * 2 + 1 + race.km;
+      wk.km = short * (wk.days > 2 ? 2 : 1) + 1 + race.km;
     } else {
-      const parts: [off: number, weight: number][] = [[-5, 1], [-3, 1.5]];
-      if (cfg.runDays > 3) parts.push([-1, 0.6]);
-      if (cfg.runDays > 4) parts.push([-4, 0.6]);
+      // bei 2 Läufen: nur Tempoeinheit + langer Lauf
+      const parts: [off: number, weight: number][] = [[-3, 1.5]];
+      if (wk.days > 2) parts.push([-5, 1]);
+      if (wk.days > 3) parts.push([-1, 0.6]);
+      if (wk.days > 4) parts.push([-4, 0.6]);
       const sum = parts.reduce((a, [, x]) => a + x, 0);
       const kms = new Map(parts.map(([off, x]) => [off, Math.max(3, roundHalf(((wk.km - wk.long) * x) / sum))]));
       const km = (off: number) => kms.get(off)!;
@@ -251,22 +268,23 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
       wk.quality = fitQuality(wk.quality, km(-3), p);
       const need = needKm(wk.quality, p);
       if (need > km(-3)) {
-        kms.set(-5, Math.max(3, km(-5) - (need - km(-3))));
+        if (kms.has(-5)) kms.set(-5, Math.max(3, km(-5) - (need - km(-3))));
         kms.set(-3, need);
       }
 
-      run(-5, 'Lockerer Lauf', km(-5), easy);
-      if (cfg.runDays > 4) run(-4, 'Regenerativer Lauf', km(-4), 'sehr locker');
+      if (wk.days > 2) run(-5, 'Lockerer Lauf', km(-5), easy);
+      if (wk.days > 4) run(-4, 'Regenerativer Lauf', km(-4), 'sehr locker');
       const hint = qualityHint(wk.quality, p);
       run(-3, wk.quality, km(-3), hint ? `inkl. Ein-/Auslaufen · ${hint}` : easy);
-      if (cfg.runDays > 3) run(-1, 'Kurzer, sehr lockerer Lauf', km(-1), easy);
+      if (wk.days > 3) run(-1, 'Kurzer, sehr lockerer Lauf', km(-1), easy);
       const mt = cfg.race === 'm' && wk.phase === 3 && wk.w % 2 === 0 ? Math.round(wk.long * 0.35) : 0;
       run(0, `Langer Lauf – ${wk.long} km`, wk.long, mt ? `${easy} · davon ${mt} km im Marathontempo${p ? ` ~${formatPace(p.m)} /km` : ''}` : easy);
       wk.km = parts.reduce((a, [off]) => a + km(off), 0) + wk.long;
     }
 
     if (cfg.mobility) {
-      for (const off of wk.race ? [-5, -3] : [-5, -3, 0]) {
+      const offs = wk.race ? [-5, -3] : [-5, -3, 0];
+      for (const off of wk.days > 2 ? offs : offs.filter(o => o !== -5)) {
         add(off, { id: 'mob', type: 'mob', title: 'Hüft-Mobility', description: off === 0 ? 'nach dem langen Lauf – mindestens Couch Stretch + 90/90' : 'nach dem Lauf, 10–15 min' });
       }
     }
@@ -274,10 +292,11 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
     events.push(...list.filter(e => e.date <= cfg.raceDate));
 
     const [name, summary] = PHASE_INFO[wk.phase]!;
+    const more = wk.w > 1 && wk.days > weeks[wk.w - 2]!.days;
     const inPhase = weeks.filter(x => x.phase === wk.phase);
     meta.push({
       headline: wk.race ? `${race.name} am ${WEEKDAYS[L]}` : `${WEEKDAYS[L]} ${wk.long} km · ${wk.quality}`,
-      note: wk.deload ? 'Entlastung' : wk.race ? 'Rennwoche' : wk.phase === 4 ? 'Taper' : '',
+      note: wk.deload ? 'Entlastung' : wk.race ? 'Rennwoche' : wk.phase === 4 ? 'Taper' : more ? `ab jetzt ${wk.days} Läufe` : '',
       deload: wk.deload,
       phase: { id: wk.phase, name, summary, time: `${fmtDay(inPhase[0]!.start)} – ${fmtDay(addDays(inPhase.at(-1)!.start, 6))}` },
     });
@@ -288,6 +307,9 @@ export function generatePlan(cfg: GenConfig): GenOutcome {
   const warnings: string[] = [];
   if (longest < race.longOk) {
     warnings.push(`Der längste Lauf erreicht nur ${longest} km – für einen ${race.name} wären etwa ${race.longOk} km sinnvoll. Mit mehr Vorlaufzeit oder einem späteren Rennen wird die Vorbereitung sicherer.`);
+  }
+  if (cfg.race === 'm' && target === 2) {
+    warnings.push('Mit nur 2 Läufen pro Woche ist ein Marathon eine knappe Vorbereitung. Steigere später auf 3 Läufe oder ergänze lockeres Radfahren als Grundlagentraining.');
   }
   if (cfg.weeklyKm < 8) warnings.push('Du startest fast ohne Laufumfang – der Plan beginnt bei 8 km pro Woche. Wenn sich das zu viel anfühlt, die erste Woche wiederholen.');
 

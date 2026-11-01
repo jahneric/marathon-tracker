@@ -187,6 +187,31 @@ describe('Plan-Generator', () => {
     expect(r.plan.events.some(e => e.type === 'mob')).toBe(true);
   });
 
+  it('plant bei 2 Läufen nur Tempoeinheit und langen Lauf', () => {
+    const r = generatePlan({ ...cfg, runDays: 2, mobility: true });
+    if (!r.ok) throw new Error(r.error);
+    const runs = r.plan.events.filter(e => e.type === 'run' && e.date < '2026-10-12');
+    expect(runs.map(e => e.date)).toEqual(['2026-10-08', '2026-10-11']);
+    expect(r.weeks.every(w => w.days === 2)).toBe(true);
+    expect(r.plan.events.filter(e => e.type === 'mob' && e.date < '2026-10-12')).toHaveLength(2);
+    expect(r.plan.events.at(-1)).toMatchObject({ race: true });
+  });
+
+  it('steigert die Läufe pro Woche phasenweise, nie in einer Entlastungswoche', () => {
+    const r = generatePlan({ ...cfg, race: 'm', raceDate: '2027-09-26', runDays: 2, runDaysLater: 4 });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.weeks[0]!.days).toBe(2);
+    expect(r.weeks.at(-1)!.days).toBe(4);
+    expect(new Set(r.weeks.map(w => w.days))).toEqual(new Set([2, 3, 4]));
+    for (let i = 1; i < r.weeks.length; i++) {
+      if (r.weeks[i]!.days > r.weeks[i - 1]!.days) expect(r.weeks[i]!.deload).toBe(false);
+    }
+    // mit 2 Läufen bleibt der Umfang niedriger als später mit 4
+    expect(Math.max(...r.weeks.filter(w => w.days === 2).map(w => w.km))).toBeLessThanOrEqual(39);
+    const plan = activePlan(state({ plan: r.plan }));
+    expect(plan.weeks.some(w => w.note === 'ab jetzt 3 Läufe')).toBe(true);
+  });
+
   it('lehnt zu kurze Vorbereitungen ab', () => {
     expect(generatePlan({ ...cfg, raceDate: '2026-10-25' }).ok).toBe(false);
   });
@@ -197,6 +222,9 @@ describe('Formatierung', () => {
     expect(parseDuration('52:30')).toBe(3150);
     expect(parseDuration('1:45:00')).toBe(6300);
     expect(parseDuration('45')).toBe(2700);
+    expect(parseDuration('42,50')).toBe(2570);
+    expect(parseDuration('42, 50')).toBe(2570);
+    expect(parseDuration('1,45,00')).toBe(6300);
     expect(formatPace(3150 / 10)).toBe('5:15');
     expect(formatPace(359.7)).toBe('6:00');
   });

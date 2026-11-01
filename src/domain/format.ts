@@ -16,7 +16,7 @@ export const roundHalf = (n: number): number => Math.max(0, Math.round(n * 2) / 
 /** „52:30“, „1:45:00“ oder „45“ (Minuten) → Sekunden */
 export const parseDuration = (s: unknown): number | null => {
   if (s == null || s === '') return null;
-  const parts = String(s).trim().split(/[:.]/).map(x => parseInt(x, 10));
+  const parts = String(s).trim().split(/[:.,]/).map(x => parseInt(x, 10));
   if (parts.some(Number.isNaN)) return null;
   const [a = 0, b = 0, c = 0] = parts;
   if (parts.length === 1) return a * 60;
