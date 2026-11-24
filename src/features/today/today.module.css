@@ -24,7 +24,7 @@
 /* Tages-Status */
 .status {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   padding: 12px 14px;
   border-radius: var(--radius);
@@ -37,6 +37,9 @@
 .status[data-state='missed'] { --s: var(--bad); background: var(--bad-soft); border-color: transparent; }
 .statusIcon { width: 24px; height: 24px; color: var(--s); flex: none; }
 .statusTitle { font-weight: 650; }
+.statusRow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.statusActions { display: flex; gap: 6px; margin-left: auto; }
+.statusReason { display: flex; flex-direction: column; gap: 6px; }
 
 /* Warnhinweis Schmerz */
 .alert {

@@ -1,10 +1,11 @@
 import { Check, Minus, Pencil, Trash2, X } from '@/ui/icons';
 import type { DateKey } from '@/domain/dates';
-import { summarize, unitLog } from '@/domain/logs';
-import { removeExtra, setLogField, setStatus, toggleDone } from '@/store/actions';
+import { SKIP_REASON_OPTIONS, summarize, unitLog } from '@/domain/logs';
+import { removeExtra, setLogField, setStatus, toggleDone, toggleField } from '@/store/actions';
 import type { AppState, Unit } from '@/store/types';
 import { Button } from '@/ui/Button';
 import { confirmDialog, toast } from '@/ui/feedback';
+import { Segmented } from '@/ui/Segmented';
 import { UNIT_META } from '../unitMeta';
 import { KraftForm } from './forms/KraftForm';
 import { MobilityForm } from './forms/MobilityForm';
@@ -77,6 +78,22 @@ export function UnitCard({ state, date, unit: u, open, onToggle }: Props) {
           {u.type === 'mob' && <MobilityForm date={date} unit={u} log={log ?? {}} />}
           {u.type === 'other' && <OtherForm date={date} unit={u} log={log ?? {}} />}
 
+          {status === 'skip' && (
+            <div className={styles.reason}>
+              <span>Warum ausgelassen?</span>
+              <Segmented
+                options={SKIP_REASON_OPTIONS}
+                value={log?.reason}
+                onChange={v => {
+                  toggleField(date, u, 'reason', v);
+                  if (log?.reason !== v) onToggle();
+                }}
+                label="Grund"
+                size="sm"
+              />
+            </div>
+          )}
+
           <label className={styles.noteField}>
             <span>Notiz</span>
             <textarea value={log?.note ?? ''} placeholder="Wie lief's?" onChange={e => setLogField(date, u, 'note', e.target.value)} />
@@ -96,10 +113,8 @@ export function UnitCard({ state, date, unit: u, open, onToggle }: Props) {
             </Button>
             <Button
               icon={<X />}
-              onClick={() => {
-                setStatus(date, u, 'skip');
-                onToggle();
-              }}
+              // Karte bleibt offen, damit der Grund gewählt werden kann
+              onClick={() => setStatus(date, u, 'skip')}
             >
               Ausgelassen
             </Button>

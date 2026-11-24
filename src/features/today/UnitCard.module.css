@@ -116,3 +116,6 @@
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .delete { margin-left: auto; }
+
+.reason { display: flex; flex-direction: column; gap: 6px; }
+.reason > span { font-size: 12.5px; font-weight: 550; color: var(--text-2); }

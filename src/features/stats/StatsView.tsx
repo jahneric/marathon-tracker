@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { EXERCISES, WEIGHTED_EXERCISES, type ExerciseId } from '@/data/exercises';
 import { formatDate, type DateKey } from '@/domain/dates';
 import { formatKm, formatPace, parseNum } from '@/domain/format';
-import { formatSets, painCounts, PAIN_LABEL, shoeKm, strengthHistory, totals, weekKm, weightSeries } from '@/domain/logs';
+import { formatSets, painCounts, PAIN_LABEL, shoeKm, skipReasonCounts, strengthHistory, totals, weekKm, weightSeries } from '@/domain/logs';
 import { activePlan, weekNumber } from '@/domain/activePlan';
 import type { AppState } from '@/store/types';
 import { Card } from '@/ui/Card';
@@ -27,6 +27,7 @@ export function StatsView({ state, today }: { state: AppState; today: DateKey })
   }));
 
   const pains = painCounts(state, today);
+  const skips = skipReasonCounts(state);
 
   return (
     <>
@@ -87,6 +88,19 @@ export function StatsView({ state, today }: { state: AppState; today: DateKey })
           <p className="small muted">Keine Beschwerden eingetragen. 👍</p>
         )}
       </Card>
+
+      {skips.length > 0 && (
+        <Card title="Warum ausgefallen">
+          <table className={styles.table}>
+            <thead><tr><th>Grund</th><th>Tage</th></tr></thead>
+            <tbody>
+              {skips.map(([r, n]) => (
+                <tr key={r}><td>{r}</td><td className="num">{n}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
 
       {state.shoes.length > 0 && (
         <Card title="Laufschuhe">

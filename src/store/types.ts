@@ -39,6 +39,8 @@ export interface UnitLog {
   t: UnitType;
   title: string;
   status?: UnitStatus;
+  /** Grund fürs Auslassen (Schlüssel aus SKIP_REASONS) */
+  reason?: string | null;
   note?: string;
   // Laufen
   km?: string;

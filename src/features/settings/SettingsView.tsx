@@ -4,7 +4,7 @@ import type { Paces } from '@/data/plan';
 import { todayKey } from '@/domain/dates';
 import { formatKm, parseNum } from '@/domain/format';
 import { shoeKm } from '@/domain/logs';
-import { addShoe, importBackup, resetAll, setPace, setSetting, toggleShoeRetired } from '@/store/actions';
+import { addShoe, importBackup, mergeBackup, resetAll, setPace, setSetting, toggleShoeRetired } from '@/store/actions';
 import { PlanCard } from './PlanCard';
 import { flush, isBackup } from '@/store/store';
 import type { AppState, Theme } from '@/store/types';
@@ -111,19 +111,32 @@ function BackupCard({ state }: { state: AppState }) {
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };
 
-  const onImport = async (e: ChangeEvent<HTMLInputElement>) => {
+  const readBackup = async (e: ChangeEvent<HTMLInputElement>): Promise<unknown> => {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
+    if (!file) return null;
     try {
       const data: unknown = JSON.parse(await file.text());
-      if (!isBackup(data)) throw new Error('kein Backup');
-      if (await confirmDialog({ title: 'Backup importieren?', message: 'Die aktuellen Daten auf diesem Gerät werden ersetzt.', confirmLabel: 'Importieren' })) {
-        importBackup(data);
-        toast('Backup importiert ✓');
-      }
-    } catch {
-      toast('Datei ist kein gültiges Backup');
+      if (isBackup(data)) return data;
+    } catch { /* unten */ }
+    toast('Datei ist kein gültiges Backup');
+    return null;
+  };
+
+  const onImport = async (e: ChangeEvent<HTMLInputElement>) => {
+    const data = await readBackup(e);
+    if (data && await confirmDialog({ title: 'Backup importieren?', message: 'Die aktuellen Daten auf diesem Gerät werden ersetzt.', confirmLabel: 'Importieren' })) {
+      importBackup(data);
+      toast('Backup importiert ✓');
+    }
+  };
+
+  const onMerge = async (e: ChangeEvent<HTMLInputElement>) => {
+    const data = await readBackup(e);
+    if (data && await confirmDialog({ title: 'Backup ergänzen?', message: 'Einträge aus dem Backup werden zu den aktuellen Daten hinzugefügt. Steht an einem Tag in beiden etwas, bleibt der aktuelle Eintrag und nur leere Felder werden ergänzt. Plan und Einstellungen bleiben, wie sie sind.', confirmLabel: 'Ergänzen' })) {
+      flush();
+      const r = mergeBackup(data);
+      toast(`Backup ergänzt ✓ – ${r.addedDays} Tage neu, ${r.mergedDays} Tage zusammengeführt`);
     }
   };
 
@@ -137,13 +150,17 @@ function BackupCard({ state }: { state: AppState }) {
   return (
     <Card title="Daten sichern">
       <p className="small text-2">
-        Alle Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup (z. B. in iCloud/Google Drive), um nichts zu verlieren oder die Daten auf ein anderes Gerät zu übertragen.
+        Alle Daten liegen nur auf diesem Gerät. Exportiere regelmäßig ein Backup (z. B. in iCloud/Google Drive), um nichts zu verlieren oder die Daten auf ein anderes Gerät zu übertragen. „Importieren“ ersetzt alles, „Ergänzen“ fügt ein älteres Backup zu den aktuellen Daten hinzu.
       </p>
       <div className="row wrap" style={{ marginTop: 12 }}>
         <Button variant="primary" icon={<Download />} onClick={exportBackup}>Backup exportieren</Button>
         <label className={styles.fileBtn}>
           <Upload aria-hidden /> Backup importieren
           <input type="file" accept="application/json,.json" onChange={onImport} className="visually-hidden" />
+        </label>
+        <label className={styles.fileBtn}>
+          <Upload aria-hidden /> Älteres Backup ergänzen
+          <input type="file" accept="application/json,.json" onChange={onMerge} className="visually-hidden" />
         </label>
       </div>
       <div className="row between" style={{ marginTop: 14 }}>

@@ -6,6 +6,15 @@ import { activePlan, mondayOf } from './activePlan';
 
 export const FEEL = ['sehr schwer', 'schwer', 'okay', 'gut', 'super'] as const;
 
+/** Gründe fürs Auslassen; Schlüssel werden gespeichert, also nicht umbenennen */
+export const SKIP_REASONS = {
+  sick: 'krank', pain: 'Schmerzen', uni: 'Uni', work: 'Arbeit', time: 'keine Zeit',
+  away: 'unterwegs', tired: 'müde', other: 'Sonstiges',
+} as const;
+export type SkipReason = keyof typeof SKIP_REASONS;
+export const SKIP_REASON_OPTIONS = Object.entries(SKIP_REASONS).map(([value, label]) => ({ value, label }));
+export const skipReasonLabel = (r: string | null | undefined): string => (r && SKIP_REASONS[r as SkipReason]) || '';
+
 export const PAIN_LABEL: Record<PainSpot, string> = {
   achilles: 'Achillessehne', shin: 'Schienbein', knee: 'Knie', hip: 'Hüfte',
   shoulder: 'Schulter', back: 'Rücken', foot: 'Fuß', other: 'Sonstiges',
@@ -87,7 +96,7 @@ export function formatSets(sets: (SetLog | null)[], kind: 'w' | 's' | 'c'): stri
 
 /** Kurze Zusammenfassung eines Eintrags für die Karte */
 export function summarize(u: Unit, l: UnitLog): string {
-  if (l.status === 'skip') return 'Ausgelassen' + (l.note ? ` · ${l.note}` : '');
+  if (l.status === 'skip') return ['Ausgelassen', skipReasonLabel(l.reason), l.note].filter(Boolean).join(' · ');
   const parts: string[] = [];
   switch (u.type) {
     case 'run': {
@@ -217,6 +226,17 @@ export function dayStatus(s: AppState, k: DateKey, today: DateKey): DayStatus {
   else if (done > 0 || extraDone) state = 'partial';
   else state = k < today ? 'missed' : 'open';
   return { state, required: required.length, done, skipped };
+}
+
+/** Tage mit ausgelassenem Training je Grund (ein Tag zählt pro Grund einmal), häufigste zuerst */
+export function skipReasonCounts(s: AppState, from?: DateKey): [label: string, days: number][] {
+  const counts = new Map<string, number>();
+  for (const [k, d] of Object.entries(s.days)) {
+    if (from && k < from) continue;
+    const reasons = new Set(Object.values(d.u).filter(l => l.status === 'skip').map(l => skipReasonLabel(l.reason) || 'ohne Grund'));
+    for (const r of reasons) counts.set(r, (counts.get(r) ?? 0) + 1);
+  }
+  return [...counts].sort((a, b) => b[1] - a[1]);
 }
 
 export interface WeightPoint { monday: DateKey; kg: number }

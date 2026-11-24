@@ -3,7 +3,8 @@ import { EXERCISES, type ExerciseId, type WorkoutId } from '@/data/exercises';
 import type { DateKey } from '@/domain/dates';
 import { formatKm } from '@/domain/format';
 import { emptyDay } from '@/domain/logs';
-import { defaultState, normalize, replaceState, update } from './store';
+import { mergeStates } from './merge';
+import { defaultState, getState, normalize, replaceState, update } from './store';
 import type { AppState, DayLog, ImportedPlan, PainLevel, PainSpot, SetLog, Settings, Unit, UnitLog, UnitType, Wellbeing } from './types';
 
 const uid = (prefix: string) => prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
@@ -28,7 +29,7 @@ export function setLogField<F extends keyof UnitLog>(k: DateKey, u: Unit, field:
   });
 }
 
-export function toggleField(k: DateKey, u: Unit, field: 'feel' | 'kind' | 'int' | 'variant', value: string) {
+export function toggleField(k: DateKey, u: Unit, field: 'feel' | 'kind' | 'int' | 'variant' | 'reason', value: string) {
   editLog(k, u, l => {
     l[field] = l[field] === value ? null : value;
   });
@@ -44,9 +45,11 @@ export function toggleDone(k: DateKey, u: Unit): boolean {
   return done;
 }
 
-export function setStatus(k: DateKey, u: Unit, status: 'done' | 'skip') {
+export function setStatus(k: DateKey, u: Unit, status: 'done' | 'skip', reason?: string) {
   editLog(k, u, l => {
     l.status = status;
+    if (status === 'done') delete l.reason;
+    else if (reason) l.reason = reason;
   });
 }
 
@@ -176,6 +179,19 @@ export function markDayDone(k: DateKey, units: Unit[]) {
   });
 }
 
+/** Alle noch offenen Pflicht-Einheiten eines Tages mit Grund als ausgelassen markieren */
+export function skipDay(k: DateKey, units: Unit[], reason: string) {
+  update(s => {
+    for (const u of units) {
+      if (u.type === 'rest' || u.optional || u.extra) continue;
+      const l = log(s, k, u);
+      if (l.status === 'done') continue;
+      l.status = 'skip';
+      l.reason = reason;
+    }
+  });
+}
+
 export function addShoe(name: string, baseKm: string) {
   update(s => {
     s.shoes.push({ id: uid('s'), name, baseKm });
@@ -203,6 +219,13 @@ export function setPace(field: keyof Paces, value: string) {
 
 export function importBackup(raw: unknown) {
   replaceState(normalize(raw));
+}
+
+/** Älteres Backup ergänzen statt ersetzen; aktuelle Einträge gewinnen */
+export function mergeBackup(raw: unknown) {
+  const r = mergeStates(getState(), normalize(raw));
+  replaceState(r.state);
+  return r;
 }
 
 export function resetAll() {
